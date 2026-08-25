@@ -1,20 +1,25 @@
-# ifndef LRF_H
-#define LRF_H
+#ifndef LRFS_H
+#define LRFS_H
 
-#include <vl53l4cx_class.h>
-#include <Arduino.h>
 #include <Wire.h>
 #include <Pins.h>
+#include <VL53L4CD.h>
 
-class LRF {
+#define SENSOR_NUM 8
+
+
+class LRFs {
     public:
-        LRF(){};
-        void ini();
-        void read_all();
-        double lrf_values [8] = {0};
+        LRFs() {};
+        void init();
+        void update();
     
     private:
         //create an array to store all the pins of the lrfs so i can loop for initialization.
+        VL53L4CD sensors[SENSOR_NUM];
+        uint16_t xshut_values[SENSOR_NUM] = {TOF_XSHUT0, TOF_XSHUT1, TOF_XSHUT2, TOF_XSHUT3, TOF_XSHUT4, TOF_XSHUT5, TOF_XSHUT6, TOF_XSHUT7};
+        uint16_t lrf_values[SENSOR_NUM] = {0};
+
 
 };
 

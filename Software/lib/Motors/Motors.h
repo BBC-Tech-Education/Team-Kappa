@@ -9,7 +9,7 @@ class Motors {
     public:
         Motors();
         void init();
-        void move(float left, float right);
+        void move(float left, float right); // Function to control the 
 
     private:
         Servo servo[4];

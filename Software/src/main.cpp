@@ -1,36 +1,63 @@
 #include <Adafruit_BNO055.h>
 #include "Motors.h"
+#include <VL53L4CD.h>
+#include <Wire.h>
+#include "LRFs.h"
+#include <Arduino_APDS9960.h>
 
-Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO055_ADDRESS_B, &Wire);
 Motors motor;
-
+LRFs lrfs;
+APDS9960 ColourSensor(Wire2,-1);
 
 void setup() {
-    delay(5000);
-//  Serial.begin(115200);
-    while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
-        Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
-        delay(1000);
-    }
-    delay(500);
-    bno.setExtCrystalUse(true);
-    delay(500);
+    // lrfs.init();
+    // motor.init();
 
-    
- //bno.printSensorDetails();
-    //motor.init();
-   
+   Serial.begin(9600);
+   while (!Serial);
+   if (!ColourSensor.begin()) {
+        Serial4.println("Error initializing APDS-9960 sensor.");
+  }
 }
+
+// void movefwd(int tagDis) {
+//     while (lrf.read(0) > tagDis) {
+//         motor.move(20.0f, 20.0f);
+//     }
+  
+// }
+
 
 
 void loop() {
-    sensors_event_t event;
-    bno.getEvent(&event);
-    float bearing = event.orientation.x;
+    // if(done == false) {
+    //     motor.move(20.0f, 20.0f);
+    //     delay(4000);
+    //     motor.move(-20.0f, -20.0f);
+    //     delay (4000);
+    //     done = true;
+    // } else {
+    //     motor.move(0.0f, 0.0f);
+    //     done = true;
+    //    lrfs.update();
+    while (! ColourSensor.colorAvailable()) {
+        delay(5);
+    }
 
-    Serial.print("Bearing: ");
-    Serial.println(bearing);
-   // motor.move(100.0f, -100.0f);
+    int r, g, b;
 
+    // read the color
+    ColourSensor.readColor(r, g, b);
 
+    // print the values
+    Serial.print("r = ");
+    Serial.println(r);
+    Serial.print("g = ");
+    Serial.println(g);
+    Serial.print("b = ");
+    Serial.println(b);
+    Serial.println();
+
+    // wait a bit before reading again
+    delay(20);
 }
