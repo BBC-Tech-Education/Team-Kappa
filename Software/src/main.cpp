@@ -50,14 +50,20 @@ void loop() {
     ColourSensor.readColor(r, g, b);
 
     // print the values
-    Serial.print("r = ");
-    Serial.println(r);
-    Serial.print("g = ");
-    Serial.println(g);
-    Serial.print("b = ");
-    Serial.println(b);
-    Serial.println();
-
+    // Serial.print("r = ");
+    // Serial.println(r);
+    // Serial.print("g = ");
+    // Serial.println(g);
+    // Serial.print("b = ");
+    // Serial.println(b);
+    // Serial.println();
+    if (r > g && (g - b) < 2) {
+        Serial.println("Red detected.");
+    } else if ( g > r && (g - b) > 4) {
+        Serial.println("Green detected.");
+    } else {
+        Serial.println("No Victims detected.");
+    }
     // wait a bit before reading again
     delay(20);
 }
