@@ -10,14 +10,7 @@ LRFs lrfs;
 APDS9960 ColourSensor(Wire2,-1);
 
 void setup() {
-    // lrfs.init();
-    // motor.init();
 
-   Serial.begin(9600);
-   while (!Serial);
-   if (!ColourSensor.begin()) {
-        Serial4.println("Error initializing APDS-9960 sensor.");
-  }
 }
 
 // void movefwd(int tagDis) {
