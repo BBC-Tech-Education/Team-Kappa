@@ -4,59 +4,29 @@
 #include <Wire.h>
 #include "LRFs.h"
 #include <Arduino_APDS9960.h>
+#include "ColourSensor.h"
 
 Motors motor;
 LRFs lrfs;
-APDS9960 ColourSensor(Wire2,-1);
+RGBsensors ColourSensor(Wire2);
 
 void setup() {
-
+    ColourSensor.init();
 }
 
-// void movefwd(int tagDis) {
-//     while (lrf.read(0) > tagDis) {
-//         motor.move(20.0f, 20.0f);
-//     }
-  
-// }
 
 
 
 void loop() {
-    // if(done == false) {
-    //     motor.move(20.0f, 20.0f);
-    //     delay(4000);
-    //     motor.move(-20.0f, -20.0f);
-    //     delay (4000);
-    //     done = true;
-    // } else {
-    //     motor.move(0.0f, 0.0f);
-    //     done = true;
-    //    lrfs.update();
-    while (! ColourSensor.colorAvailable()) {
-        delay(5);
-    }
+    ColourSensor.update();
 
-    int r, g, b;
-
-    // read the color
-    ColourSensor.readColor(r, g, b);
-
-    // print the values
-    // Serial.print("r = ");
-    // Serial.println(r);
-    // Serial.print("g = ");
-    // Serial.println(g);
-    // Serial.print("b = ");
-    // Serial.println(b);
-    // Serial.println();
-    if (r > g && (g - b) < 2) {
-        Serial.println("Red detected.");
-    } else if ( g > r && (g - b) > 4) {
-        Serial.println("Green detected.");
+    if (ColourSensor.detect_green()) {
+        Serial.println("Green works");
+    } else if (ColourSensor.detect_red()) {
+        Serial.println("Red Works.");
     } else {
-        Serial.println("No Victims detected.");
+        Serial.println("No victims detected.");
     }
-    // wait a bit before reading again
-    delay(20);
+
+    
 }

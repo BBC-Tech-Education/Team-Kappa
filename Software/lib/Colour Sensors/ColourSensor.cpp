@@ -1,6 +1,9 @@
 #include "ColourSensor.h"
 
-void RGBsensors::init() {
+
+
+void RGBsensors::init()
+{
     Serial.begin(9600);
     while (!Serial);
     if (!coloursensor.begin()) {
@@ -22,16 +25,21 @@ void RGBsensors::update() {
     colours[2] = b;
 }
 
-void RGBsensors::detect_green() {
+bool RGBsensors::detect_green() {
     
     if ( colours[1] > colours[0] && (colours[1] - colours[2]) > 4) {
-        Serial.println("Green detected.");
+        return true;
     }
+
+    return false;
 }
 
-void RGBsensors::detect_red() {
+bool RGBsensors::detect_red() {
 
     if (colours[0] > colours[1] && (colours[1] - colours[2]) < 2) {
-        Serial.println("Red detected.");
+        return true;
     }
+
+    return false;
+    
 }

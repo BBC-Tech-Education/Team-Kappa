@@ -6,14 +6,14 @@
 
 class RGBsensors {
     public:
-        RGBsensors(TwoWire &wire);
+        RGBsensors(TwoWire &wire) {};
         void init();
         void update();
-        void detect_green();
-        void detect_red();
+        bool detect_green();
+        bool detect_red();
 
     private:
-        APDS9960 coloursensor;
+        APDS9960 coloursensor = APDS9960(Wire2,-1);;
         int16_t colours[3] = {0};
 };
 
