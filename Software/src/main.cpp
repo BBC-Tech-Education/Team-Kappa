@@ -16,6 +16,7 @@ void setup() {
 
 
 
+// Colour Sensor Thing idk ask Aryan
 
 void loop() {
     ColourSensor.update();
