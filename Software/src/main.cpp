@@ -14,6 +14,7 @@
 Motors motor;
 LRFs lrfs;
 RGBsensors ColourSensor(Wire2);
+Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO055_ADDRESS_B, &Wire);
 
 ////////////////////////////////////// FSM /////////////////////////////////////
 
@@ -52,6 +53,14 @@ void silver_tile();
 void setup() {
     // Initialise all the sensors
     ColourSensor.init();
+    lrfs.init();
+    while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
+        Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
+        delay(1000);
+    }
+    delay(500);
+    bno.setExtCrystalUse(true);
+    delay(500);
 
     // Maze setup
     state = NAV;
@@ -61,7 +70,14 @@ void loop() {
     // READ ALL OF THE SENSORS
     // IMU, Colour, LRFs
     ColourSensor.update();
-
+    lrfs.update();
+    while (!bno.begin(OPERATION_MODE_IMUPLUS)) {
+        Serial.println("No BNO055 detected.");
+        delay(1000);
+    }
+    delay(500);
+    bno.setExtCrystalUse(true);
+    delay(500);
 
     // FSMs
     switch (state)
@@ -75,7 +91,7 @@ void loop() {
     case ROTATE_R:
         rotate_right();
         break;
-    case ROTATE_180;
+    case ROTATE_180:
         rotate_180();
         break;
     case NAV:
@@ -97,4 +113,48 @@ void loop() {
         state = NAV;
         break;
     }
+}
+
+
+void forward()
+{
+
+}
+
+void rotate_left()
+{
+
+}
+
+void rotate_right()
+{
+
+}
+
+void rotate_180()
+{
+
+}
+
+void navigation()
+{
+
+}
+
+void black_tile_backwards()
+{
+
+}
+
+void black_tile_rotate()
+{
+
+}
+void victims()
+{
+
+}
+void silver_tile()
+{
+    
 }
