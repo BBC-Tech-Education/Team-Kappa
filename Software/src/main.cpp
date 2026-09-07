@@ -1,15 +1,30 @@
-#include <Adafruit_BNO055.h>
+#include "Adafruit_BNO055.h"
 #include "Motors.h"
-#include <VL53L4CD.h>
+#include "VL53L4CD.h"
 #include <Wire.h>
 #include "LRFs.h"
-#include <Arduino_APDS9960.h>
+#include "Arduino_APDS9960.h"
 #include "ColourSensor.h"
+#include "ServoC.h"
 
-// hi from elliott sharp
+//dropper test
+ServoC DropperServo;
+void Droppersetup() {
+    DropperServo.attach(DROPPER);
+}
 
+void DropperL() {
+    DropperServo.write(90);
+}
 
+void DropperR() {
+    DropperServo.write(-90);
+}
 
+int main() {
+    Droppersetup();
+    DropperR();
+}
 
 //////////////////////////////////// Objects ///////////////////////////////////
 
