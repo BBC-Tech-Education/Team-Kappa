@@ -28,7 +28,7 @@ typedef enum {
     BT_BACK,
     BT_ROTATE,
     VICTIMS,
-    SILVER
+    SILVER,
 } State;
 
 
@@ -77,7 +77,7 @@ void loop() {
     case ROTATE_R:
         rotate_right();
         break;
-    case ROTATE_180;
+    case ROTATE_180:
         rotate_180();
         break;
     case NAV:
@@ -94,6 +94,12 @@ void loop() {
         break;
     case SILVER:
         silver_tile();
+        break;
+    case DROPPER_LEFT:
+        dropper_left();
+        break;
+    case DROPPER_RIGHT:
+        dropper_right();
         break;
     default:
         state = NAV;
