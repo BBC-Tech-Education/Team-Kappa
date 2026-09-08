@@ -3,10 +3,10 @@
 #include <VL53L4CD.h>
 #include <Wire.h>
 #include "LRFs.h"
-#include <Arduino_APDS9960.h>
+#include "Arduino_APDS9960.h"
+#include "Arduino.h"
 #include "ColourSensor.h"
-
-
+#include "Servo.h"
 
 
 //////////////////////////////////// Objects ///////////////////////////////////
@@ -14,7 +14,7 @@
 Motors motor;
 LRFs lrfs;
 RGBsensors ColourSensor(Wire2);
-Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO055_ADDRESS_B, &Wire);
+Servo DropperServo;
 
 ////////////////////////////////////// FSM /////////////////////////////////////
 
@@ -27,7 +27,7 @@ typedef enum {
     BT_BACK,
     BT_ROTATE,
     VICTIMS,
-    SILVER
+    SILVER,
 } State;
 
 
@@ -52,32 +52,21 @@ void silver_tile();
 
 void setup() {
     // Initialise all the sensors
-    ColourSensor.init();
-    lrfs.init();
-    while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
-        Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
-        delay(1000);
-    }
-    delay(500);
-    bno.setExtCrystalUse(true);
-    delay(500);
+    // ColourSensor.init();
 
     // Maze setup
     state = NAV;
+
+    DropperServo.attach(DROPPER);
+    delay(5000);
+    DropperServo.write(-180);
 }
 
 void loop() {
     // READ ALL OF THE SENSORS
     // IMU, Colour, LRFs
-    ColourSensor.update();
-    lrfs.update();
-    while (!bno.begin(OPERATION_MODE_IMUPLUS)) {
-        Serial.println("No BNO055 detected.");
-        delay(1000);
-    }
-    delay(500);
-    bno.setExtCrystalUse(true);
-    delay(500);
+    // ColourSensor.update();
+
 
     // FSMs
     switch (state)
@@ -150,11 +139,15 @@ void black_tile_rotate()
 {
 
 }
+
+
 void victims()
 {
-
+    
 }
+
+
 void silver_tile()
 {
-    
+
 }

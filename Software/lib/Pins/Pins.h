@@ -12,7 +12,7 @@
 #define MOTOR_BL 23
 #define MOTOR_FR 1
 #define MOTOR_BR 0
-
+#define DROPPER 1
 
 ///////////////////////////////////// TOF /////////////////////////////////////
 
@@ -36,3 +36,4 @@
 #define LED_GREEN 26
 #define LED_RED 27
 #endif
+
