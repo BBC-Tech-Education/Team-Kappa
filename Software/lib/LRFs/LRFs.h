@@ -13,7 +13,8 @@ class LRFs {
         LRFs() {};
         void init();
         void update();
-    
+        uint16_t get_value(int i);
+            
     private:
         //create an array to store all the pins of the lrfs so i can loop for initialization.
         VL53L4CD sensors[SENSOR_NUM];

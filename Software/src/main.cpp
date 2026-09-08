@@ -7,6 +7,7 @@
 #include "Arduino.h"
 #include "ColourSensor.h"
 #include "Servo.h"
+#include "Config.h"
 
 
 //////////////////////////////////// Objects ///////////////////////////////////
@@ -15,6 +16,7 @@ Motors motor;
 LRFs lrfs;
 RGBsensors ColourSensor(Wire2);
 Servo DropperServo;
+Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO055_ADDRESS_B, &Wire);
 
 ////////////////////////////////////// FSM /////////////////////////////////////
 
@@ -34,6 +36,9 @@ typedef enum {
 /////////////////////////////// Global Variables ///////////////////////////////
 
 uint8_t state;
+uint16_t target_dist;
+float target_bearing = 0.0f;
+float current_bearing = 0.0f;
 
 
 ////////////////////////////// Function Prototypes /////////////////////////////
@@ -52,20 +57,33 @@ void silver_tile();
 
 void setup() {
     // Initialise all the sensors
-    // ColourSensor.init();
+    ColourSensor.init();
+    motor.init();
+    lrfs.init();
+
+    while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
+        Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
+        delay(1000);
+    }
 
     // Maze setup
     state = NAV;
-
-    DropperServo.attach(DROPPER);
-    delay(5000);
-    DropperServo.write(-180);
 }
+
+
+
 
 void loop() {
     // READ ALL OF THE SENSORS
     // IMU, Colour, LRFs
-    // ColourSensor.update();
+    lrfs.update();
+    ColourSensor.update();
+    sensors_event_t event;
+    bno.getEvent(&event);
+    current_bearing = event.orientation.x;
+    if (current_bearing > 180.0f) {
+        current_bearing -= 360.0f;
+    }
 
 
     // FSMs
@@ -107,12 +125,28 @@ void loop() {
 
 void forward()
 {
+    uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
 
+    if (front < target_dist) {
+        motor.move(0.0f, 0.0f);
+        delay(500);
+        state = NAV;
+    } else {
+        motor.move(MOVE_SPEED, MOVE_SPEED);
+    }
 }
 
 void rotate_left()
 {
-
+    if (fabs(current_bearing - target_bearing) < 5.0f) {
+        uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+        target_dist = front - 300;
+        motor.move(0.0f, 0.0f);
+        delay(500);
+        state = FORWARD;
+    } else {
+        // Rotate left
+    }
 }
 
 void rotate_right()
@@ -127,7 +161,29 @@ void rotate_180()
 
 void navigation()
 {
+    uint16_t left = (lrfs.get_value(LRF_LB) + lrfs.get_value(LRF_LF)) / 2;
+    uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+    uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
 
+    if (left > 300) {
+        target_bearing -= 90.0f;
+        state = ROTATE_L;
+    } else if (front > 300) {
+        target_dist = front - 300;
+        state = FORWARD;
+    } else if (right > 300) {
+        target_bearing += 90.0f;
+        state = ROTATE_R;
+    } else {
+        target_bearing -= 180.0f;
+        state = ROTATE_180;
+    }
+
+    if (target_bearing > 180.0f) {
+        target_bearing -= 360.0f;
+    } else if (target_bearing < -90.0f) {
+        target_bearing += 360.0f;
+    }
 }
 
 void black_tile_backwards()
