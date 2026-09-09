@@ -16,7 +16,7 @@ Motors motor;
 LRFs lrfs;
 RGBsensors ColourSensor(Wire2);
 Servo DropperServo;
-Adafruit_BNO055 bno = Adafruit_BNO055(55, BNO055_ADDRESS_B, &Wire);
+Adafruit_BNO055 bno(55, BNO055_ADDRESS_B, &Wire1);
 
 ////////////////////////////////////// FSM /////////////////////////////////////
 
@@ -30,6 +30,7 @@ typedef enum {
     BT_ROTATE,
     VICTIMS,
     SILVER,
+    PAUSE,
 } State;
 
 
@@ -39,6 +40,7 @@ uint8_t state;
 uint16_t target_dist;
 float target_bearing = 0.0f;
 float current_bearing = 0.0f;
+unsigned long pause_start = millis();
 
 
 ////////////////////////////// Function Prototypes /////////////////////////////
@@ -52,12 +54,14 @@ void black_tile_backwards();
 void black_tile_rotate();
 void victims();
 void silver_tile();
+void pause();
 
 
 
 void setup() {
+    delay(5000);
     // Initialise all the sensors
-    ColourSensor.init();
+    // ColourSensor.init();
     motor.init();
     lrfs.init();
 
@@ -76,14 +80,23 @@ void setup() {
 void loop() {
     // READ ALL OF THE SENSORS
     // IMU, Colour, LRFs
+
+    Serial.print("State: ");
+    Serial.println(state);
+    // Serial.print("\t");
+
+
     lrfs.update();
-    ColourSensor.update();
+    // ColourSensor.update();
     sensors_event_t event;
     bno.getEvent(&event);
     current_bearing = event.orientation.x;
     if (current_bearing > 180.0f) {
         current_bearing -= 360.0f;
     }
+
+    // Serial.print("\tCurrent Bearing: ");
+    // Serial.println(current_bearing);
 
 
     // FSMs
@@ -116,6 +129,9 @@ void loop() {
     case SILVER:
         silver_tile();
         break;
+    case PAUSE:
+        pause();
+        break;
     default:
         state = NAV;
         break;
@@ -128,9 +144,8 @@ void forward()
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
 
     if (front < target_dist) {
-        motor.move(0.0f, 0.0f);
-        delay(500);
-        state = NAV;
+        pause_start = millis();
+        state = PAUSE;
     } else {
         motor.move(MOVE_SPEED, MOVE_SPEED);
     }
@@ -140,22 +155,33 @@ void rotate_left()
 {
     if (fabs(current_bearing - target_bearing) < 5.0f) {
         uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-        target_dist = front - 300;
-        motor.move(0.0f, 0.0f);
-        delay(500);
+        target_dist = max(front - 300, MIN_FDIS);
         state = FORWARD;
     } else {
-        // Rotate left
+        motor.move(-ROTATE_SPEED, ROTATE_SPEED);
     }
 }
 
 void rotate_right()
 {
-
+    if (fabs(current_bearing - target_bearing) < 5.0f) {
+        uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+        target_dist = max(front - 300, MIN_FDIS);
+        state = FORWARD;
+    } else {
+        motor.move(ROTATE_SPEED, -ROTATE_SPEED);
+    }
 }
 
 void rotate_180()
 {
+    if (fabs(current_bearing - target_bearing) < 5.0f) {
+        uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+        target_dist = max(front - 300, MIN_FDIS);
+        state = FORWARD;
+    } else {
+        motor.move(ROTATE_SPEED, -ROTATE_SPEED);
+    }
 
 }
 
@@ -169,7 +195,7 @@ void navigation()
         target_bearing -= 90.0f;
         state = ROTATE_L;
     } else if (front > 300) {
-        target_dist = front - 300;
+        target_dist = max(front - 300, MIN_FDIS);
         state = FORWARD;
     } else if (right > 300) {
         target_bearing += 90.0f;
@@ -206,4 +232,14 @@ void victims()
 void silver_tile()
 {
 
+}
+
+
+void pause()
+{
+    if ((millis() - pause_start) > 250) {
+        state = NAV;
+    } else {
+        motor.move(0.0f, 0.0f);
+    }
 }

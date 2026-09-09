@@ -5,7 +5,7 @@ Motors::Motors() {}
 void Motors::init()
 {
     for (uint8_t i = 0; i < 4; i++) {
-        servo[i].attach (pin[i]);
+        servo[i].attach(pin[i]);
     }  
 }
 

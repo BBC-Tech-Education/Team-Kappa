@@ -14,6 +14,8 @@
 
 
 #define MOVE_SPEED 60.0f
+#define ROTATE_SPEED 20.0f
 
+#define MIN_FDIS 105
 
 #endif // CONFIG_H
