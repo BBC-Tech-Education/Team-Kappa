@@ -57,7 +57,7 @@ void dropper_left() {
     delay(100);
     DropperServo.write(180); //turns motor right
     delay(500);
-    DropperServo.write(45);
+    DropperServo.write(80);
     delay(500);
     DropperServo.write(90);
 }
@@ -65,7 +65,7 @@ void dropper_right() {
     delay(100);
     DropperServo.write(0); //turns motor left
     delay(500);
-    DropperServo.write(135);
+    DropperServo.write(100);
     delay(500);
     DropperServo.write(90);
 }
