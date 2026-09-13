@@ -1,6 +1,5 @@
 #include <iostream>
 #include <map>
-#include <cstdint>
 
 using namespace std;
 
@@ -38,13 +37,13 @@ void add_cell_definition(Mazemap& maze, int x, int y, uint8_t cell_definition) {
 
 int main() {
     Mazemap maze;
-    
+    //test coordinates
     int x = -4;
     int y = 2;
-
+    //test conditions to that cell
     add_cell_definition(maze, x, y, VISITED);
     add_cell_definition(maze, x, y, WEST);
-
+    //print out all cell definitions
     for (auto& cell : maze) {
         int i = cell.first.first;
         int j = cell.first.second;
