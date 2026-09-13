@@ -10,6 +10,7 @@ const uint8_t SOUTH = 0x04; // 0000 0100 wall south
 const uint8_t WEST  = 0x08; // 0000 1000 wall west
 const uint8_t VISITED = 0x10; // 0001 0000 cell has been visited
 const uint8_t VICTIM = 0x20; // 0010 0000 cell has victim
+const uint8_t SILVER = 0x40; // 0100 0000 cell is silver tiled
 
 using Mazemap = map<pair<int, int>, uint8_t>;
 
