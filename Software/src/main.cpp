@@ -153,9 +153,9 @@ void forward()
 
 void rotate_left()
 {
-    if (fabs(current_bearing - target_bearing) < 5.0f) {
+    if (fabs(current_bearing - target_bearing) < ROTATION_MARGIN) {
         uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-        target_dist = max(front - 300, MIN_FDIS);
+        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
         state = FORWARD;
     } else {
         motor.move(-ROTATE_SPEED, ROTATE_SPEED);
@@ -164,9 +164,9 @@ void rotate_left()
 
 void rotate_right()
 {
-    if (fabs(current_bearing - target_bearing) < 5.0f) {
+    if (fabs(current_bearing - target_bearing) < ROTATION_MARGIN) {
         uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-        target_dist = max(front - 300, MIN_FDIS);
+        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
         state = FORWARD;
     } else {
         motor.move(ROTATE_SPEED, -ROTATE_SPEED);
@@ -175,9 +175,9 @@ void rotate_right()
 
 void rotate_180()
 {
-    if (fabs(current_bearing - target_bearing) < 5.0f) {
+    if (fabs(current_bearing - target_bearing) < ROTATION_MARGIN) {
         uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-        target_dist = max(front - 300, MIN_FDIS);
+        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
         state = FORWARD;
     } else {
         motor.move(ROTATE_SPEED, -ROTATE_SPEED);
@@ -191,13 +191,13 @@ void navigation()
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
     uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
 
-    if (left > 300) {
+    if (left > TILE_DIST) {
         target_bearing -= 90.0f;
         state = ROTATE_L;
-    } else if (front > 300) {
-        target_dist = max(front - 300, MIN_FDIS);
+    } else if (front > TILE_DIST) {
+        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
         state = FORWARD;
-    } else if (right > 300) {
+    } else if (right > TILE_DIST) {
         target_bearing += 90.0f;
         state = ROTATE_R;
     } else {
