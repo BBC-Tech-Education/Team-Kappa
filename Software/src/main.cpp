@@ -56,6 +56,22 @@ void victims();
 void silver_tile();
 void pause();
 
+void dropper_left() {
+    delay(100);
+    DropperServo.write(180); //turns motor right
+    delay(500);
+    DropperServo.write(80);
+    delay(500);
+    DropperServo.write(90);
+}
+void dropper_right() {
+    delay(100);
+    DropperServo.write(0); //turns motor left
+    delay(500);
+    DropperServo.write(100);
+    delay(500);
+    DropperServo.write(90);
+}
 
 
 void setup() {
@@ -65,6 +81,12 @@ void setup() {
     motor.init();
     lrfs.init();
 
+    // motor.init();
+    // lrfs.init();
+    DropperServo.attach(DROPPER);
+    delay(100);
+    DropperServo.write(90);
+    delay(500);
     while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
         Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
         delay(1000);
@@ -72,6 +94,7 @@ void setup() {
 
     // Maze setup
     state = NAV;
+
 }
 
 
