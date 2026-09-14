@@ -35,9 +35,17 @@ void add_cell_definition(Mazemap& maze, int x, int y, uint8_t cell_definition) {
     }
     
 }
-
+//PLANNED REPLACEMENT OF NAV STATE
 int main() {
     Mazemap maze;
+
+    //LRFS
+    uint16_t left = (lrfs.get_value(LRF_LB) + lrfs.get_value(LRF_LF)) / 2;
+    uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+    uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
+    uint16_t back = (lrfs.get_value(LRF_BR) + lrfs.get_value(LRF_BL)) / 2;
+
+    
     //test coordinates
     int x = -4;
     int y = 2;
@@ -59,6 +67,30 @@ int main() {
         if (definitions & VICTIM) cout << "VICTIM";
 
         cout << endl;
+    }
+    //ROTATION TEST
+    for (int i = 0; i<10; i++) {
+        int rotations = i;
+
+        cout << "Rotations: " << rotations << " Direction:";
+
+        switch (rotations % 4) {
+            case 0:
+                cout << "Facing NORTH" << endl; //IF FACING THIS WAY, LRF VALUE OF XYZ MEANS XYZ ETC FOR CELL DEFINITIONS
+                break;
+            case 1:
+                cout << "Facing WEST" << endl;
+                break;
+            case 2:
+                cout << "Facing SOUTH" << endl;
+                break;
+            case 3:
+                cout << "Facing EAST" << endl;
+                break;
+            default:
+                break;
+        //what are odds rotations gets really high?
+        }
     }
     return 0;
 }
