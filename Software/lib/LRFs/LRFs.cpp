@@ -1,7 +1,7 @@
 #include "LRFs.h"
 
 //check continuity for the xshut - All are continuous
-#define I2C_CLOCK 400000
+#define I2C_CLOCK 100000
 
 
 void LRFs::init()

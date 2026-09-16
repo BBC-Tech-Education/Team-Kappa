@@ -81,12 +81,10 @@ void setup() {
     motor.init();
     lrfs.init();
 
-    // motor.init();
-    // lrfs.init();
-    DropperServo.attach(DROPPER);
-    delay(100);
-    DropperServo.write(90);
-    delay(500);
+    // DropperServo.attach(DROPPER);
+    // delay(100);
+    // DropperServo.write(90);
+    // delay(500);
     while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
         Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
         delay(1000);
@@ -106,7 +104,7 @@ void loop() {
 
     Serial.print("State: ");
     Serial.println(state);
-    // Serial.print("\t");
+    Serial.print("\t");
 
 
     lrfs.update();
@@ -230,7 +228,7 @@ void navigation()
 
     if (target_bearing > 180.0f) {
         target_bearing -= 360.0f;
-    } else if (target_bearing < -90.0f) {
+    } else if (target_bearing <= -180.0f) {
         target_bearing += 360.0f;
     }
 }
@@ -260,9 +258,9 @@ void silver_tile()
 
 void pause()
 {
-    if ((millis() - pause_start) > 250) {
+    // if ((millis() - pause_start) > 250) {
         state = NAV;
-    } else {
-        motor.move(0.0f, 0.0f);
-    }
+    // } else {
+    //     motor.move(0.0f, 0.0f);
+    // }
 }
