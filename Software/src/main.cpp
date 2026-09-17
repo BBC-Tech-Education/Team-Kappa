@@ -81,21 +81,21 @@ void dropper_right() {
 void setup() {
     delay(5000);
     // Initialise all the sensors
-    // ColourSensor.init();
-    motor.init();
-    lrfs.init();
+    ColourSensor.init();
+    // motor.init();
+    // lrfs.init();
 
     // DropperServo.attach(DROPPER);
     // delay(100);
     // DropperServo.write(90);
     // delay(500);
-    while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
-        Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
-        delay(1000);
-    }
+    // while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
+    //     Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
+    //     delay(1000);
+    // }
 
-    // Maze setup
-    state = NAV;
+    // // Maze setup
+    // state = NAV;
 
 }
 
@@ -106,16 +106,22 @@ void loop() {
     // READ ALL OF THE SENSORS
     // IMU, Colour, LRFs
 
-    /*lrfs.update();
-    // // ColourSensor.update();
-    sensors_event_t event;
-    bno.getEvent(&event);
-    current_bearing = event.orientation.x;
-    if (current_bearing > 180.0f) {
-        current_bearing -= 360.0f;
-    }*/
+    // lrfs.update();
+    ColourSensor.update();
+    if (ColourSensor.detect_green()) {
+        Serial.println("Green works");
+    } else if (ColourSensor.detect_red()) {
+         Serial.println("Red Works.");
+    } else {
+        Serial.println("No victim detected.");
+    }
+    // sensors_event_t event;
+    // bno.getEvent(&event);
+    // current_bearing = event.orientation.x;
+    // if (current_bearing > 180.0f) {
+    //     current_bearing -= 360.0f;
+    // }
 
-    forward();
 
     // Serial.print("State: ");
     // Serial.println(state);
@@ -176,7 +182,9 @@ void forward()
     uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
     int Error = left - right;
 
+    Serial.print("Left LRF Difference: ");
     Serial.print(left);
+    Serial.print ("\t");
 
     float correction;
     // float correction = Kp * Error;

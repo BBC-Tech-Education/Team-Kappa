@@ -46,9 +46,10 @@ void LRFs::update()
         }
 
         Serial.print(lrf_values[i]);
-        Serial.println(" ");
+        Serial.print("\t");
        
     }
+    Serial.println();
 }
 
 u_int16_t LRFs::get_value(int i)
