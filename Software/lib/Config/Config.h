@@ -18,12 +18,14 @@
 /////////////////////////////////// Movement ///////////////////////////////////
 #define MOVE_SPEED 60.0f
 #define ROTATE_SPEED 20.0f
+#define Kp 2.0f
 
 
 
 
 ///////////////////////////////////// Tiles ////////////////////////////////////
 #define MIN_TARGET_DIST 105
+#define TARGET_WALL_DIST 100
 #define ROTATION_MARGIN 5.0f
 #define TILE_DIST       300
 

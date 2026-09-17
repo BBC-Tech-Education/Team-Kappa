@@ -41,6 +41,10 @@ uint16_t target_dist;
 float target_bearing = 0.0f;
 float current_bearing = 0.0f;
 unsigned long pause_start = millis();
+bool left_wall;
+bool right_wall;
+bool front_wall;
+bool back_wall;
 
 
 ////////////////////////////// Function Prototypes /////////////////////////////
@@ -102,74 +106,102 @@ void loop() {
     // READ ALL OF THE SENSORS
     // IMU, Colour, LRFs
 
-    Serial.print("State: ");
-    Serial.println(state);
-    Serial.print("\t");
-
-
-    lrfs.update();
-    // ColourSensor.update();
+    /*lrfs.update();
+    // // ColourSensor.update();
     sensors_event_t event;
     bno.getEvent(&event);
     current_bearing = event.orientation.x;
     if (current_bearing > 180.0f) {
         current_bearing -= 360.0f;
-    }
+    }*/
 
-    // Serial.print("\tCurrent Bearing: ");
-    // Serial.println(current_bearing);
+    forward();
+
+    // Serial.print("State: ");
+    // Serial.println(state);
+    // Serial.print("\t");
 
 
-    // FSMs
-    switch (state)
-    {
-    case FORWARD:
-        forward();
-        break;
-    case ROTATE_L:
-        rotate_left();
-        break;
-    case ROTATE_R:
-        rotate_right();
-        break;
-    case ROTATE_180:
-        rotate_180();
-        break;
-    case NAV:
-        navigation();
-        break;
-    case BT_BACK:
-        black_tile_backwards();
-        break;
-    case BT_ROTATE:
-        black_tile_rotate();
-        break;
-    case VICTIMS:
-        victims();
-        break;
-    case SILVER:
-        silver_tile();
-        break;
-    case PAUSE:
-        pause();
-        break;
-    default:
-        state = NAV;
-        break;
-    }
+
+
+    // // Serial.print("\tCurrent Bearing: ");
+    // // Serial.println(current_bearing);
+
+
+    // // FSMs
+    // switch (state)
+    // {
+    // case FORWARD:
+    //     forward();
+    //     break;
+    // case ROTATE_L:
+    //     rotate_left();
+    //     break;
+    // case ROTATE_R:
+    //     rotate_right();
+    //     break;
+    // case ROTATE_180:
+    //     rotate_180();
+    //     break;
+    // case NAV:
+    //     navigation();
+    //     break;
+    // case BT_BACK:
+    //     black_tile_backwards();
+    //     break;
+    // case BT_ROTATE:
+    //     black_tile_rotate();
+    //     break;
+    // case VICTIMS:
+    //     victims();
+    //     break;
+    // case SILVER:
+    //     silver_tile();
+    //     break;
+    // case PAUSE:
+    //     pause();
+    //     break;
+    // default:
+    //     state = NAV;
+    //     break;
+    // }
 }
 
 
 void forward()
 {
+    
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+    uint16_t left = (lrfs.get_value(LRF_LF) + lrfs.get_value(LRF_LB)) / 2;
+    uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
+    int Error = left - right;
 
+    Serial.print(left);
+
+    float correction;
+    // float correction = Kp * Error;
     if (front < target_dist) {
         pause_start = millis();
         state = PAUSE;
+
     } else {
-        motor.move(MOVE_SPEED, MOVE_SPEED);
+        if ((left < 200) && (right < 200)) {
+            correction = Kp * Error;
+            motor.move(MOVE_SPEED - correction, MOVE_SPEED + correction);
+
+        } else if (right < 200) {
+            correction = Kp * (TARGET_WALL_DIST - right);
+            motor.move(MOVE_SPEED - correction, MOVE_SPEED + correction);
+
+        } else if (left < 200) {
+            correction = Kp *(TARGET_WALL_DIST - left);
+            motor.move(MOVE_SPEED + correction, MOVE_SPEED - correction);
+
+        } else {
+            motor.move(MOVE_SPEED, MOVE_SPEED);
+        }
     }
+
 }
 
 void rotate_left()
