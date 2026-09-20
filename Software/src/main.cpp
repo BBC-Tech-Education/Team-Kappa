@@ -50,6 +50,18 @@ static const uint8_t direction_lookup[4][4] = {
         {EAST, NORTH, WEST, SOUTH}  // Facing EAST
     };
 
+struct Move_direction_flag {
+    int dx, dy;
+    uint8_t wall;
+};
+
+static const Move_direction_flag move_direction[4] = {
+    {0, 1, NORTH},
+    {-1, 0, WEST},
+    {0, -1, SOUTH},
+    {1, 0, EAST}
+}; 
+
 using Mazemap = map<pair<int, int>, uint8_t>;
 
 // Function to add a cell definition to the mazemap
@@ -102,6 +114,67 @@ void process_direction(Mazemap& maze, int x, int y, int& distance, uint8_t direc
     } else {
         recognise_cell_definitions(maze, x, y, direction);
     }
+}
+
+//Function to check if it's possible to move to that cell
+bool can_move(Mazemap& maze, int x, int y, const Move_direction_flag& move_direction) {
+    pair<int, int> cell = {x,y};
+    if (maze.find(cell) == maze.end()) {
+        return false;
+    } else {
+    return ((maze[cell] & move_direction.wall) == 0);
+    }
+}
+
+//FInd path to next cell
+vector<pair<int,int>> path_next_cell(Mazemap& maze, int x, int y) {
+
+    map<pair<int,int>,pair<int,int>> parent;
+    map<pair<int,int>, bool> visited_in_search;
+    queue<pair<int,int>> search_queue;
+
+    //starting conditions of search
+
+    pair<int,int> start = {x,y};
+    search_queue.push(start);
+    bool found_unvisted_cell = false;
+    pair<int, int> next_cell;
+
+    //search maze
+    while(!search_queue.empty()) {
+        pair<int,int> current_cell = search_queue.front();
+        search_queue.pop();
+        
+        //checking if current cell has found target
+        if (!(maze[current_cell] & VISITED)) {
+            found_unvisted_cell = true;
+            next_cell = current_cell;
+            break;
+        }
+        //check neighbour cells of current cell
+        for (const Move_direction_flag& direction : move_direction) {
+            //if can move to that cell
+            if (can_move(maze, current_cell.first, current_cell.second, direction)) {
+                pair<int, int> neighbour_cell = {current_cell.first + direction.dx, current_cell.second + direction.dy};
+                //if not found before
+                if (!visited_in_search[neighbour_cell]) {
+                    visited_in_search[neighbour_cell] = true;
+                    parent[neighbour_cell] = current_cell;
+                    search_queue.push(neighbour_cell);
+                }
+            }
+        }
+    }
+
+    //create vector of path
+    vector<pair<int, int>> path;
+    if (found_unvisted_cell) {
+        for (pair<int, int> cell = next_cell; cell != start; cell = parent[cell] ) {
+            path.push_back(cell);
+        }
+        reverse(path.begin(), path.end());
+    }
+    return path;
 }
 
 /////////////////////////////// Global Variables ///////////////////////////////
