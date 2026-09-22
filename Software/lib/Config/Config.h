@@ -16,9 +16,9 @@
 
 
 /////////////////////////////////// Movement ///////////////////////////////////
-#define MOVE_SPEED 60.0f
+#define MOVE_SPEED 40.0f
 #define ROTATE_SPEED 20.0f
-#define Kp 2.0f
+#define Kp 0.6f
 
 
 
