@@ -200,23 +200,33 @@ void forward()
 {
     
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-    uint16_t left = (lrfs.get_value(LRF_LF) + lrfs.get_value(LRF_LB)) / 2;
-    uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
 
-    // Ignore
-    if (front < target_dist) {
-        pause_start = millis();
-        state = PAUSE;
-        return;
+    uint16_t leftlf = lrfs.get_value(LRF_LF);
+    uint16_t leftlb = lrfs.get_value(LRF_LB);
+
+    uint16_t left;
+    if ((leftlf < 210) && (leftlb < 210)) {
+         left = (leftlf + leftlb) / 2;
+    } else if (leftlf < 210) {
+        left = leftlf;
+    } else if (leftlb < 210) {
+        left = leftlb;
     } else {
-        motor.move(MOVE_SPEED, MOVE_SPEED);
+        left = 110;
     }
-    
-    // // Centering
-    if (left > 210) {
-        left = 220 - right;
-    } else if (right > 240) {
-        right = 220 - left;
+
+    uint16_t rightlf = lrfs.get_value(LRF_RF);
+    uint16_t rightlb = lrfs.get_value(LRF_RB);
+
+    uint16_t right;
+    if ((rightlf < 210) && (rightlb < 210)) {
+        right = (rightlf + rightlb) / 2;
+    } else if (rightlf < 210) {
+        right = rightlf;
+    } else if (rightlb < 210) {
+        right = rightlb;
+    } else {
+        right = 110;
     }
 
     int16_t error = right - left;
@@ -228,11 +238,27 @@ void forward()
         bearing_adjustment = -20.0f;
     }
 
-    float bearing_error = current_bearing - (target_bearing + bearing_adjustment);
-    // Serial.printf("LRF Error: %d\tbearing adjustment: %.2f\tbearing error: %.2f\n", error, bearing_adjustment, bearing_error);
+    float adjusted_target_bearing = target_bearing + bearing_adjustment;
+
+    float bearing_error = current_bearing - adjusted_target_bearing;
+    Serial.printf("LRF Error: %d\tbearing adjustment: %.2f\tbearing error: %.2f\n", error, bearing_adjustment, bearing_error);
     
+    if (bearing_error <= -180.0f) {
+        bearing_error += 360.0f;
+    } else if (bearing_error > 180.0f) {
+        bearing_error -= 360.0f;
+    }
+
     float correction = bearing_error * BEARING_KP;
-    motor.move(MOVE_SPEED - correction, MOVE_SPEED + correction); 
+
+    if (front < target_dist) {
+        pause_start = millis();
+        state = PAUSE;
+        return;
+    } else {
+        motor.move(MOVE_SPEED - correction, MOVE_SPEED + correction); 
+    }
+    
 }
 
 void rotate_left()
