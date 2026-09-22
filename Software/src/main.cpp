@@ -221,22 +221,24 @@ void dropper_right() {
 
 void setup() {
     delay(5000);
+    Serial.println("Starting");
     // Initialise all the sensors
     // ColourSensor.init();
     motor.init();
     lrfs.init();
+    Serial.println("Motors and LRFs initialised");
 
-    DropperServo.attach(DROPPER);
-    delay(100);
-    DropperServo.write(90);
-    delay(500);
+    // DropperServo.attach(DROPPER);
+    // delay(100);
+    // DropperServo.write(90);
+    // delay(500);
     while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
         Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
         delay(1000);
     }
 
-    // Maze setup
-    state = NAV;
+    // // Maze setup
+    // state = NAV;
 
 }
 
@@ -244,19 +246,14 @@ void setup() {
 
 
 void loop() {
+    Serial.printf("State: %d\n", state);
     // READ ALL OF THE SENSORS
     // IMU, Colour, LRFs
 
     lrfs.update();
 
     // ColourSensor.update();
-    // if (ColourSensor.detect_green()) {
-    //     Serial.println("Green works");
-    // } else if (ColourSensor.detect_red()) {
-    //      Serial.println("Red Works.");
-    // } else {
-    //     Serial.println("No victim detected.");
-    // }
+
     sensors_event_t event;
     bno.getEvent(&event);
     current_bearing = event.orientation.x;
@@ -264,21 +261,8 @@ void loop() {
         current_bearing -= 360.0f;
     }
 
-
-    Serial.print("State: ");
-    Serial.println(state);
-    Serial.print("\t");
-
-
-
-
-    // Serial.print("\tCurrent Bearing: ");
-    // Serial.println(current_bearing);
-
-
     // FSMs
-    switch (state)
-    {
+    switch (state) {
     case FORWARD:
         forward();
         break;
@@ -320,27 +304,36 @@ void forward()
 {
     
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-    uint16_t left = (lrfs.get_value(LRF_LF) + lrfs.get_value(LRF_LB)) / 2;
-    uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
-    int16_t error = right - left;
-    
-    
-    float bearing_adjustment = atanf((float)error / (float)TILE_DIST) * RAD_TO_DEG;
-    float bearing_error = current_bearing - target_bearing + bearing_adjustment;
-    Serial.printf("LRF Error: %d\tbearing adjustment: %.2f\tbearing error: %.2f\n", error, bearing_adjustment, bearing_error);
-    float correction = bearing_error * Kp;
 
-    
     if (front < target_dist) {
         pause_start = millis();
         state = PAUSE;
-
-    } else {
-        motor.move(MOVE_SPEED + correction, MOVE_SPEED - correction);
+        return;
     }
 
+    uint16_t left = (lrfs.get_value(LRF_LF) + lrfs.get_value(LRF_LB)) / 2;
+    uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
 
+    if (left > 240) {
+        left = 220 - right;
+    } else if (right > 240) {
+        right = 220 - left;
+    }
 
+    int16_t error = right - left;
+    
+    float bearing_adjustment = atanf((float)error / (float)TILE_DIST) * RAD_TO_DEG;
+    if (bearing_adjustment > 20.0f) {
+        bearing_adjustment = 20.0f;
+    } else if (bearing_adjustment < -20.0f) {
+        bearing_adjustment = -20.0f;
+    }
+
+    float bearing_error = current_bearing - (target_bearing + bearing_adjustment);
+    // Serial.printf("LRF Error: %d\tbearing adjustment: %.2f\tbearing error: %.2f\n", error, bearing_adjustment, bearing_error);
+    
+    float correction = bearing_error * BEARING_KP;
+    motor.move(MOVE_SPEED - correction, MOVE_SPEED + correction); 
 }
 
 void rotate_left()
