@@ -34,18 +34,25 @@ void LRFs::init()
 }
 
 void LRFs::update()
-//   Serial.print("LRF Values: ");
-{   for (uint8_t i = 0; i < SENSOR_NUM; i++) {
+    
+{   Serial.print("LRF Values: ");  
+    for (uint8_t i = 0; i < SENSOR_NUM; i++) {
         if (sensors[i].dataReady()) {
             lrf_values[i] = sensors[i].read(false);
         }
+
+        if ((lrf_values[i] >= 1300) || (lrf_values[i] == 0)) {
+            lrf_values [i] = 1300;
+        }
+
         if (sensors[i].timeoutOccurred()) {
             lrf_values[i] = 0;
         }
-        // Serial.print(lrf_values[i]);
-        // Serial.print("\t");
+        Serial.print(lrf_values[i]);
+        Serial.print("\t");
     }
-    // Serial.println();
+    Serial.println();
+
 }
 
 u_int16_t LRFs::get_value(int i)

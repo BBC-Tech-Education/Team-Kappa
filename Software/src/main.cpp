@@ -41,6 +41,9 @@ typedef enum {
 
 uint8_t state;
 uint16_t target_dist;
+uint8_t use_forward_lrfs;
+
+
 float target_bearing = 0.0f;
 float current_bearing = 0.0f;
 unsigned long pause_start = millis();
@@ -104,7 +107,7 @@ void setup() {
 
 
 void loop() {
-    Serial.println(stateToName(state));
+    // Serial.println(stateToName(state));
     // READ ALL OF THE SENSORS
     // IMU, Colour, LRFs
 
@@ -120,6 +123,7 @@ void loop() {
         current_bearing -= 360.0f;
     }
 
+    
     // FSMs
     switch (state) {
     case FORWARD:
@@ -198,8 +202,21 @@ String stateToName(int st) {
 
 void forward()
 {
-    
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+    uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
+
+    if (use_forward_lrfs && (front < target_dist)) {
+        pause_start = millis();
+        state = PAUSE;
+        return;
+    } else if (!use_forward_lrfs && (back > target_dist)) {
+        pause_start = millis();
+        state = PAUSE;
+        return; 
+    }
+    
+    
+    
 
     uint16_t leftlf = lrfs.get_value(LRF_LF);
     uint16_t leftlb = lrfs.get_value(LRF_LB);
@@ -241,7 +258,7 @@ void forward()
     float adjusted_target_bearing = target_bearing + bearing_adjustment;
 
     float bearing_error = current_bearing - adjusted_target_bearing;
-    Serial.printf("LRF Error: %d\tbearing adjustment: %.2f\tbearing error: %.2f\n", error, bearing_adjustment, bearing_error);
+    // Serial.printf("LRF Error: %d\tbearing adjustment: %.2f\tbearing error: %.2f\n", error, bearing_adjustment, bearing_error);
     
     if (bearing_error <= -180.0f) {
         bearing_error += 360.0f;
@@ -251,14 +268,7 @@ void forward()
 
     float correction = bearing_error * BEARING_KP;
 
-    if (front < target_dist) {
-        pause_start = millis();
-        state = PAUSE;
-        return;
-    } else {
-        motor.move(MOVE_SPEED - correction, MOVE_SPEED + correction); 
-    }
-    
+    motor.move(MOVE_SPEED - correction, MOVE_SPEED + correction);    
 }
 
 void rotate_left()
@@ -305,28 +315,30 @@ void navigation()
     uint16_t left = (lrfs.get_value(LRF_LB) + lrfs.get_value(LRF_LF)) / 2;
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
     uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
-
-
+    uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
 
     if (left > TILE_DIST) {
         target_bearing -= 90.0f;
         state = ROTATE_L;
-
-    
     } else if (front > TILE_DIST) {
-        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
-        state = FORWARD;
 
-            
+
+        if (front > (back + TILE_DIST)) {
+            use_forward_lrfs = 0;
+            target_dist = back + TILE_DIST;
+        } else {
+            use_forward_lrfs = 1;
+            target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
+        }
+
+        state = FORWARD;
+    
     } else if (right > TILE_DIST) {
         target_bearing += 90.0f;
         state = ROTATE_R;
-
-    
     } else {
         target_bearing -= 180.0f;
         state = ROTATE_180;
-
     }
 
     if (target_bearing > 180.0f) {
