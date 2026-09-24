@@ -260,7 +260,7 @@ public:
   Adafruit_AS7341();
   ~Adafruit_AS7341();
 
-  bool begin(uint8_t i2c_addr = AS7341_I2CADDR_DEFAULT, TwoWire *wire = &Wire,
+  bool begin(uint8_t i2c_addr = AS7341_I2CADDR_DEFAULT, TwoWire *wire = &Wire2,
              int32_t sensor_id = 0);
 
   bool setASTEP(uint16_t astep_value);
