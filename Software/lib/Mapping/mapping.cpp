@@ -20,10 +20,14 @@ void Map::init()
     map[current_tile_id].x = 0;
     map[current_tile_id].y = 0;
     map[current_tile_id].info = 0;
+    for (uint8_t i = 0; i <4; i++) {
+        map[current_tile_id].connected_tile_id[i] = 255;
+    }
+   
 }
 
-uint8_t Map::update(uint16_t front, uint16_t right, uint16_t back, uint16_t left)
-{   
+void Map::update(uint16_t front, uint16_t right, uint16_t back, uint16_t left)
+{  
     uint8_t abs_walls = 0;
 
     int8_t current_heading = target_bearing / 90;
@@ -39,12 +43,36 @@ uint8_t Map::update(uint16_t front, uint16_t right, uint16_t back, uint16_t left
     if (left < CHECK_WALL_DIST) {
         abs_walls |= direction_lookup[(current_heading + 7) % 4].info;
     }
-    
+   
     map[current_tile_id].info |= (abs_walls & WALL_BMSK);
 
     map[current_tile_id].info |= VIS_BMSK;
 
     create_tiles();
+
+
+
+    //follow left wall
+
+
+
+    for (uint8_t i = 0; i < tile_num; i++) {
+       
+        delay(100);
+        Serial.print("Tiles: ");
+        Serial.print(i);
+        Serial.print(" ");
+        Serial.print(map[i].id);
+        Serial.print(" ");
+        Serial.print(map[i].x);
+        Serial.print(" ");
+        Serial.print(map[i].y);
+        Serial.print(" ");
+        Serial.print(map[i].info);
+        Serial.print("\n");
+    }
+
+
 
     // Figure out which way to go next
 
@@ -55,34 +83,32 @@ void Map::create_tiles()
 {
     for(uint8_t i = 0; i < 4; i++)  {
         if (!(map[current_tile_id].info & direction_lookup[i].info)) {
-            
+           
             int8_t target_x = map[current_tile_id].x + direction_lookup[i].x;
             int8_t target_y = map[current_tile_id].y + direction_lookup[i].y;
 
-            if (find_tile(target_x, target_y) == tile_num) {
-                tile_num++;
+            if (find_tile(target_x, target_y) == 255) {
+                uint8_t id = tile_num++;
+
                 map = (Tile_t*)realloc(map, sizeof(Tile_t) * tile_num);
-                map[tile_num - 1].x = map[current_tile_id].x + direction_lookup[i].x;
-                map[tile_num - 1].y = map[current_tile_id].y + direction_lookup[i].y;
-                map[tile_num - 1].info = 0;
+
+                map[id].id = id;
+                map[id].x = map[current_tile_id].x + direction_lookup[i].x;
+                map[id].y = map[current_tile_id].y + direction_lookup[i].y;
+                map[id].info = 0;
+                map[id].connected_tile_id[(i + 2) % 4] = current_tile_id;
+                map[current_tile_id].connected_tile_id[i] = id;
             }
         }
     }
 }
 
-uint8_t Map::find_tile(int8_t target_x, int8_t target_y) 
+uint8_t Map::find_tile(int8_t target_x, int8_t target_y)
 {
     for(uint8_t i = 0; i < tile_num; i++) {
-        if ((map[i].x == target_x) & (map[i].y == target_y)) {
+        if ((map[i].x == target_x) && (map[i].y == target_y)) {
             return i;
-        } 
+        }
     }
-    return tile_num;
+    return 255;
 }
-
-void Map::get_target_heading(float bearing) {
-    float target_bearing = bearing;
-}
-
-
-

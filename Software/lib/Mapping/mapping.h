@@ -18,12 +18,12 @@
 class Map {
 public:
     Map();
-    void init();
-    uint8_t update(uint16_t front, uint16_t right, uint16_t back, uint16_t left);
 
+    void init();
+    void update(uint16_t front, uint16_t right, uint16_t back, uint16_t left);
     void found_black_tile();
     void found_victim();
-    void get_target_heading(float target_bearing);
+    void get_target_heading(float target_bearing); //maybe not necessary
 
 private:
 
@@ -35,6 +35,7 @@ private:
         int8_t x;
         int8_t y;
         uint8_t info;
+        uint8_t connected_tile_id[4];
     } Tile_t;
 
     static constexpr Tile_t direction_lookup[4] = {
@@ -42,7 +43,7 @@ private:
         {.x = 1, .y = 0, .info = WALL_E_BMSK},
         {.x = 0, .y = -1, .info = WALL_S_BMSK},
         {.x = -1, .y = 0, .info = WALL_W_BMSK}
-    }; 
+    };
 
     uint8_t current_tile_id;
     uint8_t tile_num;
