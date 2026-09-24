@@ -122,8 +122,10 @@ void loop() {
     if (current_bearing > 180.0f) {
         current_bearing -= 360.0f;
     }
-
-    
+    // uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+    // uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
+    // Serial.println(front);
+    // Serial.println(back);
     // FSMs
     switch (state) {
     case FORWARD:
@@ -205,11 +207,11 @@ void forward()
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
     uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
 
-    if (use_forward_lrfs && (front < target_dist)) {
+    if ((use_forward_lrfs = 1) && (front < target_dist)) {
         pause_start = millis();
         state = PAUSE;
         return;
-    } else if (!use_forward_lrfs && (back > target_dist)) {
+    } else if ((use_forward_lrfs = 0) && (back > target_dist)) {
         pause_start = millis();
         state = PAUSE;
         return; 
@@ -326,9 +328,16 @@ void navigation()
         if (front > (back + TILE_DIST)) {
             use_forward_lrfs = 0;
             target_dist = back + TILE_DIST;
+            // Serial.print("Using Back Sensors.");
+            // Serial.print("\t");
+            // Serial.println(back + TILE_DIST);
+        
         } else {
             use_forward_lrfs = 1;
             target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
+            // Serial.print("Using Front Sensors.");
+            // Serial.print("\t");
+            // Serial.println(front);
         }
 
         state = FORWARD;

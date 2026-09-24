@@ -33,9 +33,9 @@ void LRFs::init()
     }
 }
 
-void LRFs::update()
-    
-{   Serial.print("LRF Values: ");  
+void LRFs::update() 
+{   
+    Serial.print("LRF Values: ");  
     for (uint8_t i = 0; i < SENSOR_NUM; i++) {
         if (sensors[i].dataReady()) {
             lrf_values[i] = sensors[i].read(false);
