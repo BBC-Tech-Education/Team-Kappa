@@ -50,29 +50,7 @@ void Map::update(uint16_t front, uint16_t right, uint16_t back, uint16_t left)
 
     create_tiles();
 
-
-
     //follow left wall
-
-
-
-    for (uint8_t i = 0; i < tile_num; i++) {
-       
-        delay(100);
-        Serial.print("Tiles: ");
-        Serial.print(i);
-        Serial.print(" ");
-        Serial.print(map[i].id);
-        Serial.print(" ");
-        Serial.print(map[i].x);
-        Serial.print(" ");
-        Serial.print(map[i].y);
-        Serial.print(" ");
-        Serial.print(map[i].info);
-        Serial.print("\n");
-    }
-
-
 
     // Figure out which way to go next
 
@@ -87,7 +65,9 @@ void Map::create_tiles()
             int8_t target_x = map[current_tile_id].x + direction_lookup[i].x;
             int8_t target_y = map[current_tile_id].y + direction_lookup[i].y;
 
-            if (find_tile(target_x, target_y) == 255) {
+            neighbour_cell_id = find_tile(target_x, target_y);
+
+            if (neighbour_cell_id == 255) {
                 uint8_t id = tile_num++;
 
                 map = (Tile_t*)realloc(map, sizeof(Tile_t) * tile_num);
@@ -98,6 +78,10 @@ void Map::create_tiles()
                 map[id].info = 0;
                 map[id].connected_tile_id[(i + 2) % 4] = current_tile_id;
                 map[current_tile_id].connected_tile_id[i] = id;
+
+            } else {
+                map[current_tile_id].connected_tile_id[i] = neighbour_cell_id;
+                map[neighbour_cell_id].connected_tile_id[(i + 2) % 4] = current_tile_id;
             }
         }
     }
@@ -111,4 +95,38 @@ uint8_t Map::find_tile(int8_t target_x, int8_t target_y)
         }
     }
     return 255;
+}
+
+uint8_t Map::navigate() {
+
+    int8_t current_heading = target_bearing / 90;
+
+    uint8_t rel_front = direction_lookup[(current_heading + 4) % 4].info;
+    uint8_t rel_right = direction_lookup[(current_heading + 5) % 4].info;
+    uint8_t rel_back = direction_lookup[(current_heading + 6) % 4].info
+    uint8_t rel_left = direction_lookup[(current_heading + 7) % 4].info;
+
+    if (map[current_tile_id].info & rel_left) {
+        return state_left;
+        target_bearing -= 90.0f;
+
+    } else if (map[current_tile_id].info & rel_front) {
+        return state_forward;
+
+    } else if (map[current_tile_id].info & rel_right) {
+        return state_right;
+        target_bearing += 90.0f;
+
+    } else {
+        return state_180;
+        target_bearing -= 180.0f;
+    }
+
+    if (target_bearing > 180.0f) {
+        target_bearing -= 360.0f;
+
+    } else if (target_bearing <= -180.0f) {
+        target_bearing += 360.0f;
+    }
+
 }

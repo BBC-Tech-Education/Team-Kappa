@@ -13,6 +13,11 @@
 #define VIC_BMSK    (1U << 5)
 #define BLACK_BMSK  (1U << 6)
 
+#define state_forward   1
+#define state_left      2
+#define state_right     3
+#define state_180       4
+
 #define CHECK_WALL_DIST 150
 
 class Map {
@@ -23,7 +28,7 @@ public:
     void update(uint16_t front, uint16_t right, uint16_t back, uint16_t left);
     void found_black_tile();
     void found_victim();
-    void get_target_heading(float target_bearing); //maybe not necessary
+    uint8_t navigate();
 
 private:
 
@@ -49,6 +54,7 @@ private:
     uint8_t tile_num;
     Tile_t* map;
     float target_bearing;
+
 };
 
 #endif
