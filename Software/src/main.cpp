@@ -93,9 +93,10 @@ void setup() {
         Serial.println("Could not find AS7341");
         while (1) { delay(10); }
     }
-    
+
+   
     as7341.setATIME(100);
-    as7341.setASTEP(999);
+    as7341.setASTEP(699); //Increase this number if need more accuracy. decreases speed of retrieval tho (Default: 900)
     as7341.setGain(AS7341_GAIN_256X);
 
     // Serial.println("Starting");
@@ -126,42 +127,59 @@ void loop() {
     uint16_t readings[12];
 
     if (!as7341.readAllChannels(readings)){
-        Serial.println("Error reading all channels!");
-        return;
+    Serial.println("Error reading all channels!");
+    return;
     }
 
-    Serial.print("ADC0/F1 415nm : ");
-    Serial.print(readings[0]);
-    Serial.print("\t");
-    Serial.print("ADC1/F2 445nm : ");
-    Serial.print(readings[1]);
-    Serial.print("\t");
-    Serial.print("ADC2/F3 480nm : ");
-    Serial.print(readings[2]);
-    Serial.print("\t");
-    Serial.print("ADC3/F4 515nm : ");
-    Serial.print(readings[3]);
-    Serial.print("\t");
-    Serial.print("ADC0/F5 555nm : ");
-    
-    Serial.print(readings[6]);
-    Serial.print("\t");
-    Serial.print("ADC1/F6 590nm : ");
-    Serial.print(readings[7]);
-    Serial.print("\t");
-    Serial.print("ADC2/F7 630nm : ");
-    Serial.print(readings[8]);
-    Serial.print("\t");
-    Serial.print("ADC3/F8 680nm : ");
-    Serial.print(readings[9]);
-    Serial.print("\t");
-    Serial.print("ADC4/Clear    : ");
-    Serial.print(readings[10]);
-    Serial.print("\t");
-    Serial.print("ADC5/NIR      : ");
-    Serial.println(readings[11]);
+    as7341.setLEDCurrent(10);
+    as7341.enableLED(true);
 
-    Serial.println();
+    // Serial.print("ADC0/F1 415nm : ");
+    // Serial.print(readings[0]);
+    // Serial.print("\t");
+    // Serial.print("ADC1/F2 445nm : ");
+    // Serial.print(readings[1]);
+    // Serial.print("\t");
+    // Serial.print("ADC2/F3 480nm : ");
+    // Serial.print(readings[2]);
+    // Serial.print("\t");
+    // Serial.print("ADC3/F4 515nm : ");
+    // Serial.print(readings[3]);
+    // Serial.print("\t");
+    // Serial.print("ADC0/F5 555nm : ");
+    // Serial.print(readings[6]);
+    // Serial.print("\t");
+    // Serial.print("ADC1/F6 590nm : ");
+    // Serial.print(readings[7]);
+    // Serial.print("\t");
+    // Serial.print("ADC2/F7 630nm : ");
+    // Serial.print(readings[8]);
+    // Serial.print("\t");
+    // Serial.print("ADC3/F8 680nm : ");
+    // Serial.print(readings[9]);
+    // Serial.print("\t");
+    // Serial.print("ADC4/Clear    : ");
+    // Serial.print(readings[10]);
+    // Serial.print("\t");
+    // Serial.print("ADC5/NIR      : ");
+    // Serial.println(readings[11]);
+
+    // Serial.println();
+
+    uint16_t red = (readings[8] + readings[9]) / 2;
+    u_int16_t green = (readings[3] + readings[6]) / 2;
+
+    // Victims
+    if ((readings[10] > 65000) && (red > green)) {
+        Serial.println("Red Detected");
+    } else if ((readings[10] > 65000) && (green > red)) {
+        Serial.println("Green Detected");
+    } else {
+        Serial.println("No Victim Detected.");
+    }
+
+
+
 
     // lrfs.update();
 
