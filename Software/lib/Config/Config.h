@@ -16,7 +16,7 @@
 
 
 /////////////////////////////////// Movement ///////////////////////////////////
-#define MOVE_SPEED 20.0f
+#define MOVE_SPEED 60.0f
 #define ROTATE_SPEED 20.0f
 #define BEARING_KP 2.0f
 #define MAX_BEARING_ERROR 28.0f

@@ -1,22 +1,19 @@
-#include <Adafruit_BNO055.h>
-#include "Motors.h"
-#include <VL53L4CD.h>
-#include <Wire.h>
-#include "LRFs.h"
-#include "Arduino_APDS9960.h"
-#include "Arduino.h"
-#include "ColourSensor.h"
-#include "Servo.h"
+#include "Adafruit_BNO055.h"
+#include "colour_sensor.h"
 #include "Config.h"
-#include "Adafruit_AS7341.h"
+#include "LRFs.h"
+#include "Motors.h"
+#include "VL53L4CD.h"
+#include "Servo.h"
+
+#include <Arduino.h>
 
 //////////////////////////////////// Objects ///////////////////////////////////
 
 Motors motor;
 LRFs lrfs;
-// RGBsensors ColourSensor(Wire2);
-Adafruit_AS7341 as7341;
-Servo DropperServo;
+ColourSensor colour;
+Servo dropper_servo;
 Adafruit_BNO055 bno(55, BNO055_ADDRESS_B, &Wire1);
 // Mazemap maze;
 
@@ -45,9 +42,7 @@ uint8_t use_forward_lrfs;
 float target_bearing = 0.0f;
 float current_bearing = 0.0f;
 unsigned long pause_start = millis();
-// int rotations = 0;
-// int x = 0;
-// int y = 0;
+
 
 ////////////////////////////// Function Prototypes /////////////////////////////
 
@@ -63,214 +58,84 @@ void silver_tile();
 void pause();
 String stateToName(int st);
 
-void dropper_left() {
-    delay(100);
-    DropperServo.write(180); //turns motor right
-    delay(500);
-    DropperServo.write(80);
-    delay(500);
-    DropperServo.write(90);
-}
-void dropper_right() {
-    delay(100);
-    DropperServo.write(0); //turns motor left
-    delay(500);
-    DropperServo.write(100);
-    delay(500);
-    DropperServo.write(90);
-}
 
 
-void setup() {
-    delay(5000);
-    Serial.begin(115200);
+/////////////////////////////////// Functions //////////////////////////////////
 
-    while (!Serial) {
-        delay(1);
-    }
-    
-    if (!as7341.begin()){
-        Serial.println("Could not find AS7341");
-        while (1) { delay(10); }
+
+void setup()
+{
+    delay(2000);
+
+    // Initialise all the sensors
+
+    motor.init();
+    lrfs.init();
+    colour.init();
+
+    while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
+        Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
+        delay(1000);
     }
 
-   
-    as7341.setATIME(100);
-    as7341.setASTEP(699); //Increase this number if need more accuracy. decreases speed of retrieval tho (Default: 900)
-    as7341.setGain(AS7341_GAIN_256X);
-
-    // Serial.println("Starting");
-    // // Initialise all the sensors
-
-    // motor.init();
-    // lrfs.init();
-    // Serial.println("Motors and LRFs initialised");
-
-
-    // while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
-    //     Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
-    //     delay(1000);
-    // }
-
-    // // // Maze setup
-    // state = NAV;
-
+    // Maze setup
+    state = NAV;
 }
 
 
 
 
-void loop() {
-    // Serial.println(stateToName(state));
+void loop()
+{
     // READ ALL OF THE SENSORS
-    // IMU, Colour, LRFs
-    uint16_t readings[12];
-
-    if (!as7341.readAllChannels(readings)){
-    Serial.println("Error reading all channels!");
-    return;
-    }
-
-    as7341.setLEDCurrent(10);
-    as7341.enableLED(true);
-
-    // Serial.print("ADC0/F1 415nm : ");
-    // Serial.print(readings[0]);
-    // Serial.print("\t");
-    // Serial.print("ADC1/F2 445nm : ");
-    // Serial.print(readings[1]);
-    // Serial.print("\t");
-    // Serial.print("ADC2/F3 480nm : ");
-    // Serial.print(readings[2]);
-    // Serial.print("\t");
-    // Serial.print("ADC3/F4 515nm : ");
-    // Serial.print(readings[3]);
-    // Serial.print("\t");
-    // Serial.print("ADC0/F5 555nm : ");
-    // Serial.print(readings[6]);
-    // Serial.print("\t");
-    // Serial.print("ADC1/F6 590nm : ");
-    // Serial.print(readings[7]);
-    // Serial.print("\t");
-    // Serial.print("ADC2/F7 630nm : ");
-    // Serial.print(readings[8]);
-    // Serial.print("\t");
-    // Serial.print("ADC3/F8 680nm : ");
-    // Serial.print(readings[9]);
-    // Serial.print("\t");
-    // Serial.print("ADC4/Clear    : ");
-    // Serial.print(readings[10]);
-    // Serial.print("\t");
-    // Serial.print("ADC5/NIR      : ");
-    // Serial.println(readings[11]);
-
-    // Serial.println();
-
-    uint16_t red = (readings[8] + readings[9]) / 2;
-    u_int16_t green = (readings[3] + readings[6]) / 2;
-    u_int16_t noise = (readings[0] + readings[11]) / 2;
-
-    // Victims
-    if ((readings[10] > 65000) && (red > green)) {
-        Serial.println("Red Detected");
-    } else if ((readings[10] > 65000) && (green > red)) {
-        Serial.println("Green Detected");
-    } else {
-        Serial.println("No Victim Detected.");
-    }
-
-    //Different tiles
-    if (readings[10] < 65000) {
-        Serial.println("Black Tile.");
-    }
-    else if((readings[10] > 65000) && (14000 > noise &&  noise > 10000)) {
-        Serial.println("Silver Tile.");
-    } else {
-        Serial.println("Normal Tile");
-    }
+    static sensors_event_t event;
 
     lrfs.update();
+    colour.update();
+    bno.getEvent(&event);
+
+    current_bearing = event.orientation.x;
+    if (current_bearing > 180.0f) {
+        current_bearing -= 360.0f;
+    }
+
+    // Serial.printf("R: %d, G: %d, B: %d, S: %d\n", colour.detect_red(), colour.detect_green(), colour.detect_black(), colour.detect_silver());
 
 
-    // sensors_event_t event;
-    // bno.getEvent(&event);
-    // current_bearing = event.orientation.x;
-    // if (current_bearing > 180.0f) {
-    //     current_bearing -= 360.0f;
-    // }
-
-    // // FSMs
-    // switch (state) {
-    // case FORWARD:
-    //     forward();
-    //     break;
-    // case ROTATE_L:
-    //     rotate_left();
-    //     break;
-    // case ROTATE_R:
-    //     rotate_right();
-    //     break;
-    // case ROTATE_180:
-    //     rotate_180();
-    //     break;
-    // case NAV:
-    //     navigation();
-    //     break;
-    // case BT_BACK:
-    //     black_tile_backwards();
-    //     break;
-    // case BT_ROTATE:
-    //     black_tile_rotate();
-    //     break;
-    // case VICTIMS:
-    //     victims();
-    //     break;
-    // case SILVER:
-    //     silver_tile();
-    //     break;
-    // case PAUSE:
-    //     pause();
-    //     break;
-    // default:
-    //     state = NAV;
-    //     break;
-    // }
-}
-
-String stateToName(int st) {
+    // FSM
     switch (state) {
     case FORWARD:
-        return "Forward";
+        forward();
         break;
     case ROTATE_L:
-        return "Turn Left";
+        rotate_left();
         break;
     case ROTATE_R:
-        return "Turn Right";
+        rotate_right();
         break;
     case ROTATE_180:
-        return "Turn 180";
+        rotate_180();
         break;
     case NAV:
-        return "Nav State";
+        navigation();
         break;
     case BT_BACK:
-        return "BT";
+        black_tile_backwards();
         break;
     case BT_ROTATE:
-        return "";
+        black_tile_rotate();
         break;
     case VICTIMS:
-       return "V";
+        victims();
         break;
     case SILVER:
-        return "Sil";
+        silver_tile();
         break;
     case PAUSE:
-        return "Pause";
+        pause();
         break;
     default:
-        return "NAN";
+        state = NAV;
         break;
     }
 }
@@ -452,9 +317,68 @@ void silver_tile()
 
 void pause()
 {
-     if ((millis() - pause_start) > 250) {
+    if ((millis() - pause_start) > 250) {
         state = NAV;
     } else {
         motor.move(0.0f, 0.0f);
+    }
+}
+
+
+void dropper_left() {
+    delay(100);
+    dropper_servo.write(180); //turns motor right
+    delay(500);
+    dropper_servo.write(80);
+    delay(500);
+    dropper_servo.write(90);
+}
+void dropper_right() {
+    delay(100);
+    dropper_servo.write(0); //turns motor left
+    delay(500);
+    dropper_servo.write(100);
+    delay(500);
+    dropper_servo.write(90);
+}
+
+
+
+
+String stateToName(int st) {
+    switch (state) {
+    case FORWARD:
+        return "Forward";
+        break;
+    case ROTATE_L:
+        return "Turn Left";
+        break;
+    case ROTATE_R:
+        return "Turn Right";
+        break;
+    case ROTATE_180:
+        return "Turn 180";
+        break;
+    case NAV:
+        return "Nav State";
+        break;
+    case BT_BACK:
+        return "BT";
+        break;
+    case BT_ROTATE:
+        return "";
+        break;
+    case VICTIMS:
+       return "V";
+        break;
+    case SILVER:
+        return "Sil";
+        break;
+    case PAUSE:
+        return "Pause";
+        break;
+    default:
+        return "NAN";
+        break;
     }
 }

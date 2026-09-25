@@ -26,10 +26,13 @@ void setup() {
 void loop() {
   uint16_t readings[12];
 
+ 
   if (!as7341.readAllChannels(readings)){
     Serial.println("Error reading all channels!");
     return;
   }
+
+
 
   Serial.print("ADC0/F1 415nm : ");
   Serial.println(readings[0]);
