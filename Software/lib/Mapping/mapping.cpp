@@ -20,7 +20,7 @@ void Map::init()
     map[current_tile_id].x = 0;
     map[current_tile_id].y = 0;
     map[current_tile_id].info = 0;
-    for (uint8_t i = 0; i <4; i++) {
+    for (uint8_t i = 0; i < 4; i++) {
         map[current_tile_id].connected_tile_id[i] = 255;
     }
    
@@ -67,7 +67,7 @@ void Map::create_tiles()
 
             neighbour_cell_id = find_tile(target_x, target_y);
 
-            if (neighbour_cell_id == 255) {
+            if (neighbour_cell_id == 255) { //create tile
                 uint8_t id = tile_num++;
 
                 map = (Tile_t*)realloc(map, sizeof(Tile_t) * tile_num);
@@ -76,10 +76,14 @@ void Map::create_tiles()
                 map[id].x = map[current_tile_id].x + direction_lookup[i].x;
                 map[id].y = map[current_tile_id].y + direction_lookup[i].y;
                 map[id].info = 0;
+                for (uint8_t i = 0; i < 4; i++) {
+                    map[id].connected_tile_id[i] = 255;
+                }
+                
                 map[id].connected_tile_id[(i + 2) % 4] = current_tile_id;
                 map[current_tile_id].connected_tile_id[i] = id;
 
-            } else {
+            } else { //connect tiles
                 map[current_tile_id].connected_tile_id[i] = neighbour_cell_id;
                 map[neighbour_cell_id].connected_tile_id[(i + 2) % 4] = current_tile_id;
             }
@@ -109,17 +113,21 @@ uint8_t Map::navigate() {
     if (map[current_tile_id].info & rel_left) {
         return state_left;
         target_bearing -= 90.0f;
+        current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 7) % 4];
 
     } else if (map[current_tile_id].info & rel_front) {
         return state_forward;
+        current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 4) % 4];
 
     } else if (map[current_tile_id].info & rel_right) {
         return state_right;
         target_bearing += 90.0f;
+        current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 5) % 4];
 
     } else {
         return state_180;
         target_bearing -= 180.0f;
+        current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 6) % 4];
     }
 
     if (target_bearing > 180.0f) {
