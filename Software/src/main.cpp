@@ -168,6 +168,7 @@ void loop() {
 
     uint16_t red = (readings[8] + readings[9]) / 2;
     u_int16_t green = (readings[3] + readings[6]) / 2;
+    u_int16_t noise = (readings[0] + readings[11]) / 2;
 
     // Victims
     if ((readings[10] > 65000) && (red > green)) {
@@ -178,10 +179,17 @@ void loop() {
         Serial.println("No Victim Detected.");
     }
 
+    //Different tiles
+    if (readings[10] < 65000) {
+        Serial.println("Black Tile.");
+    }
+    else if((readings[10] > 65000) && (14000 > noise &&  noise > 10000)) {
+        Serial.println("Silver Tile.");
+    } else {
+        Serial.println("Normal Tile");
+    }
 
-
-
-    // lrfs.update();
+    lrfs.update();
 
 
     // sensors_event_t event;
