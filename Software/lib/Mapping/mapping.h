@@ -27,6 +27,7 @@ public:
     void init();
     void update(uint16_t front, uint16_t right, uint16_t back, uint16_t left);
     void found_black_tile();
+    void victim_update();
     uint8_t map_victim();
     uint8_t navigate();
 

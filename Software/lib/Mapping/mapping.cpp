@@ -125,23 +125,23 @@ void Map::create_tiles()
                 
                 map[id].connected_tile_id[(i + 2) % 4] = current_tile_id;
                 map[current_tile_id].connected_tile_id[i] = id;
-                Serial.print("New cell connected at ");
-                Serial.print((i + 2) % 4);
-                Serial.println(" with current");
-                Serial.print("Current cell connected at ");
-                Serial.print(i);
-                Serial.println(" with new cell");
+                // Serial.print("New cell connected at ");
+                // Serial.print((i + 2) % 4);
+                // Serial.println(" with current");
+                // Serial.print("Current cell connected at ");
+                // Serial.print(i);
+                // Serial.println(" with new cell");
 
             } else { //connect tiles
 
                 map[current_tile_id].connected_tile_id[i] = neighbour_cell_id;
                 map[neighbour_cell_id].connected_tile_id[(i + 2) % 4] = current_tile_id;
-                Serial.print("Neighbour cell connected at ");
-                Serial.print((i + 2) % 4);
-                Serial.println(" with current");
-                Serial.print("Current cell connected at ");
-                Serial.print(i);
-                Serial.println(" with neighbour");
+                // Serial.print("Neighbour cell connected at ");
+                // Serial.print((i + 2) % 4);
+                // Serial.println(" with current");
+                // Serial.print("Current cell connected at ");
+                // Serial.print(i);
+                // Serial.println(" with neighbour");
             }
         }
     }
@@ -151,8 +151,8 @@ uint8_t Map::find_tile(int8_t target_x, int8_t target_y)
 {
     for(uint8_t i = 0; i < tile_num; i++) {
         if ((map[i].x == target_x) && (map[i].y == target_y)) {
-            Serial.print("Found tile id ");
-            Serial.println(i);
+            // Serial.print("Found tile id ");
+            // Serial.println(i);
             return i;
         }
     }
@@ -164,38 +164,38 @@ uint8_t Map::navigate() {
 
     uint8_t rel_front = direction_lookup[(current_heading + 4) % 4].info;
     uint8_t rel_right = direction_lookup[(current_heading + 5) % 4].info;
-    // uint8_t rel_back = direction_lookup[(current_heading + 6) % 4].info;
+    uint8_t rel_back = direction_lookup[(current_heading + 6) % 4].info;
     uint8_t rel_left = direction_lookup[(current_heading + 7) % 4].info;
 
     if (!(map[current_tile_id].info & rel_left)) {
         target_bearing -= 90.0f;
         current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 7) % 4];
-        Serial.println("state_left");
-        Serial.print("New current id: ");
-        Serial.println(current_tile_id);
+        // Serial.println("state_left");
+        // Serial.print("New current id: ");
+        // Serial.println(current_tile_id);
         return state_left;
 
     } else if (!(map[current_tile_id].info & rel_front)) {
         current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 4) % 4];
-        Serial.println("State_forward");
-        Serial.print("New current id: ");
-        Serial.println(current_tile_id);
+        // Serial.println("State_forward");
+        // Serial.print("New current id: ");
+        // Serial.println(current_tile_id);
         return state_forward;
 
     } else if (!(map[current_tile_id].info & rel_right)) {
         target_bearing += 90.0f;
         current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 5) % 4];
-        Serial.println("State_right");
-        Serial.print("New current id: ");
-        Serial.println(current_tile_id);
+        // Serial.println("State_right");
+        // Serial.print("New current id: ");
+        // Serial.println(current_tile_id);
         return state_right;
 
     } else {
         target_bearing -= 180.0f;
         current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 6) % 4];
-        Serial.println("State_180");
-        Serial.print("New current id: ");
-        Serial.println(current_tile_id);
+        // Serial.println("State_180");
+        // Serial.print("New current id: ");
+        // Serial.println(current_tile_id);
         return state_180;
     }
 

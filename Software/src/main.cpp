@@ -350,15 +350,6 @@ void black_tile_rotate()
 
 }
 
-void dropper_left() {
-    delay(100);
-    dropper_servo.write(180); //turns motor right
-    delay(500);
-    dropper_servo.write(80);
-    delay(500);
-    dropper_servo.write(90);
-}
-
 void victims()
 {
     if (harmed_victim_cond == 1) {
@@ -393,6 +384,15 @@ void pause()
     } else {
         motor.move(0.0f, 0.0f);
     }
+}
+
+void dropper_left() {
+    delay(100);
+    dropper_servo.write(180); //turns motor right
+    delay(500);
+    dropper_servo.write(80);
+    delay(500);
+    dropper_servo.write(90);
 }
 
 void dropper_right() {
