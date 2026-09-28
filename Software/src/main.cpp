@@ -62,6 +62,8 @@ void black_tile_rotate();
 void victims();
 void silver_tile();
 void pause();
+void dropper_left();
+void dropper_right();
 String stateToName(int st);
 
 
@@ -79,6 +81,13 @@ void setup()
     lrfs.init();
     colour.init();
     maze.init();
+    pinMode(LED_RED, OUTPUT);
+    pinMode(LED_GREEN, OUTPUT);
+
+    dropper_servo.attach(DROPPER);
+    delay(100);
+    dropper_servo.write(90);
+
 
     while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
         Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
@@ -96,7 +105,9 @@ void loop()
 {
     // READ ALL OF THE SENSORS
     static sensors_event_t event;
-
+    // delay(2000);
+    // dropper_left();
+    
     lrfs.update();
     colour.update();
     bno.getEvent(&event);
@@ -286,49 +297,48 @@ void navigation()
 
     if (unharmed_victim_cond == 1 || harmed_victim_cond == 1) {
         state = VICTIMS;
-    }
+    } else {
+        maze.update(front, right, back, left);
+        uint8_t next_state = maze.navigate();
+        switch(next_state) {
+        case(state_forward):
 
-    maze.update(front, right, back, left);
-    uint8_t next_state = maze.navigate();
-    switch(next_state) {
-    case(state_forward):
+            if (front > (back + TILE_DIST)) {
+            use_forward_lrfs = 0;
+            target_dist = back + TILE_DIST;    
+            } else {
+                use_forward_lrfs = 1;
+                target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
 
-        if (front > (back + TILE_DIST)) {
-        use_forward_lrfs = 0;
-        target_dist = back + TILE_DIST;    
-        } else {
-            use_forward_lrfs = 1;
-            target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
+            }
 
+            state = FORWARD;
+            break;
+        case(state_left):
+
+            target_bearing -= 90.0f;
+            state = ROTATE_L;
+            break;
+        case(state_right):
+
+            target_bearing += 90.0f;
+            state = ROTATE_R;
+            break;
+        case(state_180):
+
+            target_bearing -= 180.0f;
+            state = ROTATE_180;
+            break;
         }
-
-        state = FORWARD;
-        break;
-    case(state_left):
-
-        target_bearing -= 90.0f;
-        state = ROTATE_L;
-        break;
-    case(state_right):
-
-        target_bearing += 90.0f;
-        state = ROTATE_R;
-        break;
-    case(state_180):
-
-        target_bearing -= 180.0f;
-        state = ROTATE_180;
-        break;
     }
-
     if (target_bearing > 180.0f) {
-        target_bearing -= 360.0f;
-
+         target_bearing -= 360.0f;
     } else if (target_bearing <= -180.0f) {
         target_bearing += 360.0f;
     }
+
 }
-}
+
 
 void black_tile_backwards()
 {
