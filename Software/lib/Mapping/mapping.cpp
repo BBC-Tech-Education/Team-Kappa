@@ -9,12 +9,16 @@ Map::Map()
 
 uint8_t Map::map_victim() 
 {
-    if (!(map[current_tile_id].info & VIC_BMSK)) {
-        map[current_tile_id].info |= VIC_BMSK;
-        return 0;
+    if (map[current_tile_id].info & VIC_BMSK) {
+        return SEEN_VIC;
     } else {
-        return 1;
+        return NEW_VIC;
     }
+}
+
+void Map::victim_update()
+{
+    map[current_tile_id].info |= VIC_BMSK;
 }
 
 void Map::found_black_tile()

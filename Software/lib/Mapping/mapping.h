@@ -18,6 +18,9 @@
 #define state_right     2
 #define state_180       3
 
+#define NEW_VIC     0
+#define SEEN_VIC    1
+
 #define CHECK_WALL_DIST 150
 
 class Map {

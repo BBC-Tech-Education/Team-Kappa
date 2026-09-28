@@ -295,42 +295,38 @@ void navigation()
     uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
     uint16_t left = (lrfs.get_value(LRF_LB) + lrfs.get_value(LRF_LF)) / 2;
 
-    if (unharmed_victim_cond == 1 || harmed_victim_cond == 1) {
-        state = VICTIMS;
-    } else {
-        maze.update(front, right, back, left);
-        uint8_t next_state = maze.navigate();
-        switch(next_state) {
-        case(state_forward):
 
-            if (front > (back + TILE_DIST)) {
-            use_forward_lrfs = 0;
-            target_dist = back + TILE_DIST;    
-            } else {
-                use_forward_lrfs = 1;
-                target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
-
-            }
-
-            state = FORWARD;
-            break;
-        case(state_left):
-
-            target_bearing -= 90.0f;
-            state = ROTATE_L;
-            break;
-        case(state_right):
-
-            target_bearing += 90.0f;
-            state = ROTATE_R;
-            break;
-        case(state_180):
-
-            target_bearing -= 180.0f;
-            state = ROTATE_180;
-            break;
+    maze.update(front, right, back, left);
+    uint8_t next_state = maze.navigate();
+    switch(next_state) {
+    case(state_forward):
+        if (front > (back + TILE_DIST)) {
+        use_forward_lrfs = 0;
+        target_dist = back + TILE_DIST;    
+        } else {
+            use_forward_lrfs = 1;
+            target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
         }
+        state = FORWARD;
+        break;
+
+    case(state_left):
+        target_bearing -= 90.0f;
+        state = ROTATE_L;
+        break;
+
+    case(state_right):
+        target_bearing += 90.0f;
+        state = ROTATE_R;
+        break;
+
+    case(state_180):
+
+        target_bearing -= 180.0f;
+        state = ROTATE_180;
+        break;
     }
+
     if (target_bearing > 180.0f) {
          target_bearing -= 360.0f;
     } else if (target_bearing <= -180.0f) {
@@ -351,22 +347,33 @@ void black_tile_rotate()
 }
 
 void victims()
-{
-    if (harmed_victim_cond == 1) {
-       harmed_victim_cond = 0;
-       harmed_victim_counter = harmed_victim_counter + 1;
-       pinMode(LED_RED, HIGH);
-       delay(3000);
-       pinMode(LED_RED, LOW);
-       dropper_left();
-       state = NAV;
-    } else if (unharmed_victim_cond == 1) {
-       unharmed_victim_cond = 0;
-       unharmed_victim_counter = unharmed_victim_counter + 1;
-       pinMode(LED_GREEN, HIGH);
-       delay(3000);
-       pinMode(LED_GREEN, LOW);
-       state = NAV;
+{   
+    uint8_t vic_seen_bef = maze.map_victim();
+    switch(vic_seen_bef) {
+    case(NEW_VIC):
+        if (harmed_victim_cond == 1) {
+            harmed_victim_cond = 0;
+            harmed_victim_counter++;
+            pinMode(LED_RED, HIGH);
+            delay(3000);
+            pinMode(LED_RED, LOW);
+            dropper_left(); //add multidirection capabilities
+            state = NAV;
+
+        } else if (unharmed_victim_cond == 1) {
+            unharmed_victim_cond = 0;
+            unharmed_victim_counter++;
+            pinMode(LED_GREEN, HIGH);
+            delay(3000);
+            pinMode(LED_GREEN, LOW);
+            state = NAV;
+        }
+        maze.victim_update();
+    
+    case(SEEN_VIC):
+        unharmed_victim_cond = 0;
+        harmed_victim_cond = 0;
+        state = NAV;
     }
 }
 
@@ -380,7 +387,11 @@ void silver_tile()
 void pause()
 {
     if ((millis() - pause_start) > 250) {
+        if (unharmed_victim_cond == 1 || harmed_victim_cond == 1) {
+        state = VICTIMS;
+        } else {
         state = NAV;
+        }
     } else {
         motor.move(0.0f, 0.0f);
     }
@@ -390,7 +401,7 @@ void dropper_left() {
     delay(100);
     dropper_servo.write(180); //turns motor right
     delay(500);
-    dropper_servo.write(80);
+    dropper_servo.write(75);
     delay(500);
     dropper_servo.write(90);
 }
@@ -399,7 +410,7 @@ void dropper_right() {
     delay(100);
     dropper_servo.write(0); //turns motor left
     delay(500);
-    dropper_servo.write(100);
+    dropper_servo.write(105);
     delay(500);
     dropper_servo.write(90);
 }
