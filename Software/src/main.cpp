@@ -5,8 +5,8 @@
 #include "Motors.h"
 #include "VL53L4CD.h"
 #include "Servo.h"
-
 #include <Arduino.h>
+#include "mapping.h"
 
 //////////////////////////////////// Objects ///////////////////////////////////
 
@@ -15,7 +15,7 @@ LRFs lrfs;
 ColourSensor colour;
 Servo dropper_servo;
 Adafruit_BNO055 bno(55, BNO055_ADDRESS_B, &Wire1);
-// Mazemap maze;
+Map maze;
 
 ////////////////////////////////////// FSM /////////////////////////////////////
 
@@ -72,6 +72,7 @@ void setup()
     motor.init();
     lrfs.init();
     colour.init();
+    maze.init();
 
     while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
         Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
@@ -252,22 +253,27 @@ void rotate_180()
 
 void navigation()
 {
-    uint16_t left = (lrfs.get_value(LRF_LB) + lrfs.get_value(LRF_LF)) / 2;
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
     uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
     uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
+    uint16_t left = (lrfs.get_value(LRF_LB) + lrfs.get_value(LRF_LF)) / 2;
 
-    if (left > TILE_DIST) {
-        target_bearing -= 90.0f;
-        state = ROTATE_L;
-    } else if (front > TILE_DIST) {
+    Serial.print(front);
+    Serial.print("\t");
+    Serial.print(right);
+    Serial.print("\t");
+    Serial.print(back);
+    Serial.print("\t");
+    Serial.println(left);
 
+    maze.update(front, right, back, left);
+    uint8_t next_state = maze.navigate();
+    switch(next_state) {
+    case(state_forward):
 
         if (front > (back + TILE_DIST)) {
-            use_forward_lrfs = 0;
-            target_dist = back + TILE_DIST;
-
-        
+        use_forward_lrfs = 0;
+        target_dist = back + TILE_DIST;    
         } else {
             use_forward_lrfs = 1;
             target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
@@ -275,13 +281,22 @@ void navigation()
         }
 
         state = FORWARD;
-    
-    } else if (right > TILE_DIST) {
+        break;
+    case(state_left):
+
+        target_bearing -= 90.0f;
+        state = ROTATE_L;
+        break;
+    case(state_right):
+
         target_bearing += 90.0f;
         state = ROTATE_R;
-    } else {
+        break;
+    case(state_180):
+
         target_bearing -= 180.0f;
         state = ROTATE_180;
+        break;
     }
 
     if (target_bearing > 180.0f) {

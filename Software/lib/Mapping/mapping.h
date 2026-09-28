@@ -13,10 +13,10 @@
 #define VIC_BMSK    (1U << 5)
 #define BLACK_BMSK  (1U << 6)
 
-#define state_forward   1
-#define state_left      2
-#define state_right     3
-#define state_180       4
+#define state_forward   0
+#define state_left      1
+#define state_right     2
+#define state_180       3
 
 #define CHECK_WALL_DIST 150
 
@@ -27,7 +27,7 @@ public:
     void init();
     void update(uint16_t front, uint16_t right, uint16_t back, uint16_t left);
     void found_black_tile();
-    void found_victim();
+    uint8_t map_victim();
     uint8_t navigate();
 
 private:

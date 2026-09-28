@@ -37,9 +37,9 @@ void ColourSensor::update()
         sensor.getAllChannels(readings);
 
         for (uint8_t i = 0; i < 12; i++) {
-            Serial.printf("%d: %d  ", i, readings[i]);
+            // Serial.printf("%d: %d  ", i, readings[i]);
         }
-        Serial.println();
+        // Serial.println();
 
 
         // uint16_t red    = (readings[8] + readings[9])  / 2;
