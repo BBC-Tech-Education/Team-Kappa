@@ -17,6 +17,12 @@ uint8_t Map::map_victim()
     }
 }
 
+void Map::found_black_tile()
+{
+    map[current_tile_id].info |= BLACK_BMSK;
+    current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 6) % 4];
+}
+
 
 void Map::init()
 {
