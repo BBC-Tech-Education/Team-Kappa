@@ -425,13 +425,30 @@ void victims()
 
 void silver_tile()
 {
+    for (i = 0; i < (harmed_victim_counter + 1); i++) {
+        digitalWrite(LED_RED, HIGH);
+        delay(1000);
+        digitalWrite(LED_RED, LOW);
+        delay (500);
+    }
 
+    for (i = 0; i < (unharmed_victim_counter + 1); i++) {
+        digitalWrite(LED_GREEN, HIGH);
+        delay(1000);
+        digitalWrite(LED_GREEN, LOW);
+        delay(500);
+    }
+
+    return;
 }
 
 void pause()
 {
     if ((millis() - pause_start) > 250) {
-        if (unharmed_victim_cond || harmed_victim_cond) {
+        if (silver_tile_cond) {
+            state = SILVER;
+        }
+        else if (unharmed_victim_cond || harmed_victim_cond) {
             state = VICTIMS;
         } else {
             state = NAV;
