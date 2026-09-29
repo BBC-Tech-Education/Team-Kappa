@@ -26,6 +26,7 @@ typedef enum {
     ROTATE_180,
     NAV,
     BT_BACK,
+    BT_PAUSE,
     BT_ROTATE,
     VICTIMS,
     SILVER,
@@ -45,7 +46,6 @@ unsigned long pause_start = millis();
 
 uint8_t harmed_victim_cond;
 uint8_t unharmed_victim_cond;
-uint8_t black_tile_cond;
 uint8_t silver_tile_cond;
 uint8_t harmed_victim_counter;
 uint8_t unharmed_victim_counter;
@@ -58,6 +58,7 @@ void rotate_right();
 void rotate_180();
 void navigation();
 void black_tile_backwards();
+void black_tile_pause();
 void black_tile_rotate();
 void victims();
 void silver_tile();
@@ -98,17 +99,11 @@ void setup()
     state = NAV;
 }
 
-
-
-
 void loop()
 {
     // READ ALL OF THE SENSORS
     static sensors_event_t event;
-    // // delay(2000);
-    // // dropper_left();
- 
-    
+
     lrfs.update();
     colour.update();
     bno.getEvent(&event);
@@ -117,9 +112,8 @@ void loop()
     if (current_bearing > 180.0f) {
         current_bearing -= 360.0f;
     }
-    Serial.println(stateToName(state));
-    // // Serial.printf("R: %d, G: %d, B: %d, S: %d\n", colour.detect_red(), colour.detect_green(), colour.detect_black(), colour.detect_silver());
 
+    // Serial.println(stateToName(state));
 
     // FSM
     switch (state) {
@@ -141,6 +135,9 @@ void loop()
     case BT_BACK:
         black_tile_backwards();
         break;
+    case BT_PAUSE:
+        black_tile_pause();
+        break;
     case BT_ROTATE:
         black_tile_rotate();
         break;
@@ -161,26 +158,27 @@ void loop()
 
 void forward()
 {
-
-    // TRANSITIONS TO PAUSE STATE
+    // TRANSITIONS TO DIFFERENT STATE
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
     uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
 
-    if (black_tile_cond == 1) {
+    if (colour.detect_black()) {
         state = BT_BACK;
-        
+        maze.found_black_tile();
+        harmed_victim_cond = 0;
+        unharmed_victim_cond = 0;
+        return;
     }
 
-    if ((use_forward_lrfs = 1) && (front < target_dist)) {
+    if (use_forward_lrfs && (front < target_dist)) {
         pause_start = millis();
         state = PAUSE;
         return;
-    } else if ((use_forward_lrfs = 0) && (back > target_dist)) {
+    } else if (!use_forward_lrfs && (back > target_dist)) {
         pause_start = millis();
         state = PAUSE;
         return; 
     } 
-    
     
     
     // ERROR CODE: CREATING WALLS IF NOT THERE, USING WALLS IF THERE
@@ -226,7 +224,6 @@ void forward()
     float adjusted_target_bearing = target_bearing + bearing_adjustment;
 
     float bearing_error = current_bearing - adjusted_target_bearing;
-    // Serial.printf("LRF Error: %d\tbearing adjustment: %.2f\tbearing error: %.2f\n", error, bearing_adjustment, bearing_error);
     
     if (bearing_error <= -180.0f) {
         bearing_error += 360.0f;
@@ -235,26 +232,24 @@ void forward()
     }
 
     float correction = bearing_error * BEARING_KP;
-
     
+
     // ACTUAL LINE THAT MOVES MOTORS
     motor.move(MOVE_SPEED - correction, MOVE_SPEED + correction);    
 
-    // Colour detection
 
-    if (colour.detect_green() == 1) {
+    // COLOUR DETECTION
+    if (colour.detect_green()) {
         unharmed_victim_cond = 1;
-    } else if (colour.detect_red() == 1) {
+        harmed_victim_cond = 0;
+    } else if (colour.detect_red()) {
         harmed_victim_cond = 1;
-    } else if (colour.detect_black() == 1) {
-        black_tile_cond = 1;
+        unharmed_victim_cond = 0;
+    } else if (colour.detect_silver()) {
+        silver_tile_cond = 1;
         harmed_victim_cond = 0;
         unharmed_victim_cond = 0;
-    } else if (colour.detect_silver() == 1) {
-        silver_tile_cond = 1;
     }
-
-    // Serial.printf("Green: %d\tRed: %d\tBlack: %d\n", unharmed_victim_cond, harmed_victim_cond, black_tile_cond);
 }
 
 void rotate_left()
@@ -288,8 +283,6 @@ void rotate_180()
         uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
         target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
         state = FORWARD;
-
-
     } else {
         motor.move(ROTATE_SPEED, -ROTATE_SPEED);
     }
@@ -343,41 +336,75 @@ void navigation()
 
 }
 
-
 void black_tile_backwards()
 {
-    // 
+
+    uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+    uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
+
+    if (use_forward_lrfs) {
+        if (front > (target_dist + TILE_DIST)) {
+            pause_start = millis();
+            state = BT_PAUSE;
+            return;
+        }
+    } else {
+        if (back < (target_dist - TILE_DIST)) {
+            pause_start = millis();
+            state = BT_PAUSE;
+            return;
+        }
+    }
+
+    motor.move(-MOVE_SPEED, -MOVE_SPEED);
+}
+
+void black_tile_pause()
+{
+    if ((millis() - pause_start) > 250) {
+        state = BT_ROTATE;
+        target_bearing -= 180.0f;
+        if (target_bearing <= -180.0f) { 
+            target_bearing += 360.0f;
+        }
+    } else {
+        motor.move(0.0f, 0.0f);
+    }
 }
 
 void black_tile_rotate()
 {
-    // Only left state or 80 state.
-
+    if (fabs(current_bearing - target_bearing) < ROTATION_MARGIN) {
+        uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
+        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
+        state = NAV;
+    } else {
+        motor.move(ROTATE_SPEED, -ROTATE_SPEED);
+    }
 }
 
 void victims()
 {   
     uint8_t vic_seen_bef = maze.map_victim();
-    uint16_t left = (lrfs.get_value(LRF_LB) + lrfs.get_value(LRF_LF)) / 2;
     uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
     
     switch(vic_seen_bef) {
     case(NEW_VIC):
-        if (harmed_victim_cond == 1) {
+        if (harmed_victim_cond) {
             harmed_victim_cond = 0;
             harmed_victim_counter++;
             digitalWrite(LED_RED, HIGH);
             delay(3000);
             digitalWrite(LED_RED, LOW);
 
-            if (right < TARGET_WALL_DIST)
+            if (right < TARGET_WALL_DIST) {
                 dropper_right();
-            else {
+            } else {
                 dropper_left();
             }
             state = NAV;
 
-        } else if (unharmed_victim_cond == 1) {
+        } else if (unharmed_victim_cond) {
             unharmed_victim_cond = 0;
             unharmed_victim_counter++;
             digitalWrite(LED_GREEN, HIGH);
@@ -386,28 +413,28 @@ void victims()
             state = NAV;
         }
         maze.victim_update();
-    
+        break;
+
     case(SEEN_VIC):
         unharmed_victim_cond = 0;
         harmed_victim_cond = 0;
         state = NAV;
+        break;
     }
 }
-
 
 void silver_tile()
 {
 
 }
 
-
 void pause()
 {
     if ((millis() - pause_start) > 250) {
-        if (unharmed_victim_cond == 1 || harmed_victim_cond == 1) {
-        state = VICTIMS;
+        if (unharmed_victim_cond || harmed_victim_cond) {
+            state = VICTIMS;
         } else {
-        state = NAV;
+            state = NAV;
         }
     } else {
         motor.move(0.0f, 0.0f);
