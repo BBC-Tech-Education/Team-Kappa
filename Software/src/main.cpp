@@ -94,7 +94,7 @@ void setup()
         delay(1000);
     }
 
-    // Maze setup
+    // // Maze setup
     state = NAV;
 }
 
@@ -105,8 +105,9 @@ void loop()
 {
     // READ ALL OF THE SENSORS
     static sensors_event_t event;
-    // delay(2000);
-    // dropper_left();
+    // // delay(2000);
+    // // dropper_left();
+ 
     
     lrfs.update();
     colour.update();
@@ -117,7 +118,7 @@ void loop()
         current_bearing -= 360.0f;
     }
     Serial.println(stateToName(state));
-    // Serial.printf("R: %d, G: %d, B: %d, S: %d\n", colour.detect_red(), colour.detect_green(), colour.detect_black(), colour.detect_silver());
+    // // Serial.printf("R: %d, G: %d, B: %d, S: %d\n", colour.detect_red(), colour.detect_green(), colour.detect_black(), colour.detect_silver());
 
 
     // FSM
@@ -165,6 +166,11 @@ void forward()
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
     uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
 
+    if (black_tile_cond == 1) {
+        state = BT_BACK;
+        
+    }
+
     if ((use_forward_lrfs = 1) && (front < target_dist)) {
         pause_start = millis();
         state = PAUSE;
@@ -173,7 +179,7 @@ void forward()
         pause_start = millis();
         state = PAUSE;
         return; 
-    }
+    } 
     
     
     
@@ -244,6 +250,8 @@ void forward()
         black_tile_cond = 1;
         harmed_victim_cond = 0;
         unharmed_victim_cond = 0;
+    } else if (colour.detect_silver() == 1) {
+        silver_tile_cond = 1;
     }
 
     // Serial.printf("Green: %d\tRed: %d\tBlack: %d\n", unharmed_victim_cond, harmed_victim_cond, black_tile_cond);
@@ -338,34 +346,43 @@ void navigation()
 
 void black_tile_backwards()
 {
-
+    // 
 }
 
 void black_tile_rotate()
 {
+    // Only left state or 80 state.
 
 }
 
 void victims()
 {   
     uint8_t vic_seen_bef = maze.map_victim();
+    uint16_t left = (lrfs.get_value(LRF_LB) + lrfs.get_value(LRF_LF)) / 2;
+    uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
+    
     switch(vic_seen_bef) {
     case(NEW_VIC):
         if (harmed_victim_cond == 1) {
             harmed_victim_cond = 0;
             harmed_victim_counter++;
-            pinMode(LED_RED, HIGH);
+            digitalWrite(LED_RED, HIGH);
             delay(3000);
-            pinMode(LED_RED, LOW);
-            dropper_left(); //add multidirection capabilities
+            digitalWrite(LED_RED, LOW);
+
+            if (right < TARGET_WALL_DIST)
+                dropper_right();
+            else {
+                dropper_left();
+            }
             state = NAV;
 
         } else if (unharmed_victim_cond == 1) {
             unharmed_victim_cond = 0;
             unharmed_victim_counter++;
-            pinMode(LED_GREEN, HIGH);
+            digitalWrite(LED_GREEN, HIGH);
             delay(3000);
-            pinMode(LED_GREEN, LOW);
+            digitalWrite(LED_GREEN, LOW);
             state = NAV;
         }
         maze.victim_update();

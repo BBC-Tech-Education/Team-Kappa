@@ -56,7 +56,7 @@ private:
 
     uint8_t current_tile_id;
     uint8_t tile_num;
-    Tile_t* map;
+    Tile_t* map; 
     float target_bearing;
 
 };

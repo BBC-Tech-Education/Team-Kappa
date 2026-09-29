@@ -26,7 +26,7 @@
 
 ///////////////////////////////////// Tiles ////////////////////////////////////
 #define MIN_TARGET_DIST 105
-#define TARGET_WALL_DIST 100
+#define TARGET_WALL_DIST 150
 #define ROTATION_MARGIN 5.0f
 #define TILE_DIST       300
 
