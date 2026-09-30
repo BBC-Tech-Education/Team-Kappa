@@ -460,21 +460,23 @@ void pause()
 }
 
 void dropper_left() {
+
+    //90 is centre, 180 is right, 0 is left.
     delay(100);
-    dropper_servo.write(180); //turns motor right
-    delay(500);
-    dropper_servo.write(75);
-    delay(500);
-    dropper_servo.write(90);
+    dropper_servo.write(160); //turns motor right (drops single package)
+    delay(1000);
+    dropper_servo.write(80); // Pushes package outside
+    delay(1000);
+    dropper_servo.write(90); //returns to original position
 }
 
 void dropper_right() {
     delay(100);
-    dropper_servo.write(0); //turns motor left
-    delay(500);
-    dropper_servo.write(105);
-    delay(500);
-    dropper_servo.write(90);
+    dropper_servo.write(20); //turns motor left (drops single package)
+    delay(1000);
+    dropper_servo.write(100); // Pushes package outside
+    delay(1000);
+    dropper_servo.write(90); //returns to original position
 }
 
 String stateToName(int st) {
