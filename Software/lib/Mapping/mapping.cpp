@@ -173,6 +173,26 @@ uint8_t Map::navigate() {
     uint8_t rel_back = direction_lookup[(current_heading + 6) % 4].info;
     uint8_t rel_left = direction_lookup[(current_heading + 7) % 4].info;
 
+    if (map[current_tile_id].id == 0) {
+
+        uint8_t checksilver = 0;
+
+        for(uint8_t i = 0; i < 4; i++) {
+            if (map[current_tile_id].connected_tile_id[i] < 255) {
+                neighbour_tile_id = map[current_tile_id].connected_tile_id[i];
+                if (map[neighbour_tile_id].info & VIS_BMSK) {
+                    checksilver++;
+                }
+            } else {
+                checksilver++;
+            }
+        }
+
+        if (checksilver == 4) {
+            return state_silver;
+        }
+    }
+
     if (!(map[current_tile_id].info & rel_left)) {
         target_bearing -= 90.0f;
         current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 7) % 4];

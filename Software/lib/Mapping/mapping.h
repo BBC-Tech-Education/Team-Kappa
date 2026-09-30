@@ -17,6 +17,7 @@
 #define state_left      1
 #define state_right     2
 #define state_180       3
+#define state_silver    4
 
 #define NEW_VIC     0
 #define SEEN_VIC    1

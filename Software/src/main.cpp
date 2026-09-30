@@ -245,10 +245,6 @@ void forward()
     } else if (colour.detect_red()) {
         harmed_victim_cond = 1;
         unharmed_victim_cond = 0;
-    } else if (colour.detect_silver()) {
-        silver_tile_cond = 1;
-        harmed_victim_cond = 0;
-        unharmed_victim_cond = 0;
     }
 }
 
@@ -325,6 +321,9 @@ void navigation()
 
         target_bearing -= 180.0f;
         state = ROTATE_180;
+        break;
+    case(state_silver):
+        state = SILVER;
         break;
     }
 
@@ -439,7 +438,8 @@ void silver_tile()
         digitalWrite(LED_GREEN, LOW);
         delay(500);
     }
-
+    delay(60000);
+    state = SILVER;
     return;
 }
 
@@ -476,9 +476,6 @@ void dropper_right() {
     delay(500);
     dropper_servo.write(90);
 }
-
-
-
 
 String stateToName(int st) {
     switch (state) {
