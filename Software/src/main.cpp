@@ -425,6 +425,7 @@ void victims()
 
 void silver_tile()
 {
+    uint8_t i;
     for (i = 0; i < (harmed_victim_counter + 1); i++) {
         digitalWrite(LED_RED, HIGH);
         delay(1000);

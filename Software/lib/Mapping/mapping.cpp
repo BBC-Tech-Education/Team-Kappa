@@ -26,6 +26,7 @@ void Map::found_black_tile()
     int8_t current_heading = target_bearing / 90;
     map[current_tile_id].info |= BLACK_BMSK;
     current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 6) % 4];
+    target_bearing += 180;
 }
 
 
