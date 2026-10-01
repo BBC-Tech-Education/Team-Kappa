@@ -207,8 +207,8 @@ void Map::search_map()
                 search[neighbour_search_id].parent_search_id = current_search_id;
         
             }
-            current_search_id++;
         }
+        current_search_id++;
     }
 
 
