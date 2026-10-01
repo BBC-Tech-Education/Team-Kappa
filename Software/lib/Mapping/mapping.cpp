@@ -45,7 +45,12 @@ void Map::init()
     for (uint8_t i = 0; i < 4; i++) {
         map[current_tile_id].connected_tile_id[i] = 255;
     }
-   
+
+    step_num = 0;
+    current_step = 0;
+    nav = nullptr;
+    search = nullptr;  
+    map_solved = 0;
 }
 
 void Map::update(uint16_t front, uint16_t right, uint16_t back, uint16_t left)
@@ -164,6 +169,81 @@ uint8_t Map::find_tile(int8_t target_x, int8_t target_y)
     }
     return 255;
 }
+//test BFS search
+void Map::search_map() 
+{
+    uint8_t current_search_id = 0;
+    uint8_t search_num = 1;
+    uint8_t found_next_tile = 0;
+
+    search = (Search_t*)malloc(sizeof(Search_t) * search_num);
+
+    search[current_search_id].search_id = current_search_id;
+    search[current_search_id].tile_id = current_tile_id;
+    search[current_search_id].parent_search_id = 255;
+
+    while (current_search_id < search_num) {
+        uint8_t current_search_tile_id = search[current_search_id].tile_id;
+
+        if (!(map[current_search_tile_id].info & VIS_BMSK)) {
+            uint8_t target_search_id = current_search_id;
+            found_next_tile = 1;
+            break;
+        }
+
+        if (map[current_search_tile_id].tile_id == 0) {
+            uint8_t start_search_id = current_search_id;
+        }
+
+        for (uint8_t i = 0; i < 4; i++) {
+            if ((map[current_search_tile_id].connected_tile_id[i] < 255) && (!(map[current_search_tile_id].info & BLACK_BMSK))) {
+                uint8_t neighbour_tile_id = map[current_search_tile_id].connected_tile_id[i];
+                uint8_t neighbour_search_id = search_num++;
+
+                search = (Search_t*)realloc(search, sizeof(Search_t) * search_num);
+
+                search[neighbour_search_id].search_id = neighbour_search_id;
+                search[neighbour_search_id].tile_id = neighbour_tile_id;
+                search[neighbour_search_id].parent_search_id = current_search_id;
+        
+            }
+            current_search_id++;
+        }
+    }
+
+
+    if (found_next_tile) {
+        step_num = 1;
+        nav = (Navigation_t*)malloc(sizeof(Navigation_t) * step_num);
+        for (uint8_t search_id = target_search_id; search_id > 0; search_id = search[search_id].parent_search_id) {
+            
+            uint8_t tile_id = search[search_id].tile_id;
+            uint8_t tile_step = step_num++;
+            nav = (Navigation_t*)realloc(nav, sizeof(Navigation_t) * step_num);
+            nav[tile_step].id = tile_id;
+        }
+
+        std::reverse(nav, nav + step_num);
+
+    } else {
+        //silver_state search path
+        map_solved = 1;
+        step_num = 1;
+        nav = (Navigation_t*)malloc(sizeof(Navigation_t) * step_num);
+        for (uint8_t search_id = start_search_id; search_id > 0; search_id = search[search_id].parent_search_id) {
+            
+            uint8_t tile_id = search[search_id].tile_id;
+            uint8_t tile_step = step_num++;
+            nav = (Navigation_t*)realloc(nav, sizeof(Navigation_t) * step_num);
+            nav[tile_step].id = tile_id;
+        }
+
+        std::reverse(nav, nav + step_num);
+    }
+
+    free(search);
+    search = nullptr;
+}
 
 uint8_t Map::navigate() {
     int8_t current_heading = target_bearing / 90;
@@ -172,6 +252,29 @@ uint8_t Map::navigate() {
     uint8_t rel_right = direction_lookup[(current_heading + 5) % 4].info;
     uint8_t rel_back = direction_lookup[(current_heading + 6) % 4].info;
     uint8_t rel_left = direction_lookup[(current_heading + 7) % 4].info;
+
+    // test
+
+    if (current_step == step_num) {
+        free(nav);
+        nav = nullptr;
+        current_step = 0;
+    }
+
+    if (nav == nullptr) {
+        search_map();
+        for (uint8_t i = 0; i < step_num; i++) {
+            Serial.print("Step ");
+            Serial.print(i);
+            Serial.print(": ");
+            Serial.println(nav[i].id);
+        }
+        current_step = step_num; //resets nav algorithm for testing
+    } else {
+        uint8_t target_tile_id = nav[current_step].id;
+        current_step++;
+    }
+    // test
 
     if (map[current_tile_id].id == 0) {
 
