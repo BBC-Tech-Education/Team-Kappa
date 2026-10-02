@@ -2,7 +2,7 @@
 #define MAPPING_H
 
 #include <Arduino.h>
-#include <vector>
+#include <algorithm>
 
 #define WALL_N_BMSK (1U << 0)
 #define WALL_E_BMSK (1U << 1)
@@ -39,6 +39,7 @@ private:
 
     void create_tiles();
     uint8_t find_tile(int8_t target_x, int8_t target_y);
+    void search_map();
 
     typedef struct {
         uint8_t id;
@@ -47,6 +48,16 @@ private:
         uint8_t info;
         uint8_t connected_tile_id[4];
     } Tile_t;
+
+    typedef struct {
+        uint8_t search_id;
+        uint8_t tile_id;
+        uint8_t parent_search_id;
+    } Search_t;
+
+    typedef struct {
+        uint8_t id;
+    } Navigation_t;
 
     static constexpr Tile_t direction_lookup[4] = {
         {.x = 0, .y = 1, .info = WALL_N_BMSK},
@@ -57,7 +68,14 @@ private:
 
     uint8_t current_tile_id;
     uint8_t tile_num;
-    Tile_t* map; 
+    Tile_t* map;
+
+    uint8_t step_num;
+    uint8_t current_step;
+    Navigation_t* nav;
+    Search_t* search;
+    uint8_t map_solved;
+
     float target_bearing;
 
 };
