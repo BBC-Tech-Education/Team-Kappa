@@ -114,6 +114,7 @@ void loop()
     }
 
     // Serial.println(stateToName(state));
+    Serial.println(use_forward_lrfs);
 
     // FSM
     switch (state) {

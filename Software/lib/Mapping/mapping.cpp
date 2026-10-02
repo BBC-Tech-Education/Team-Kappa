@@ -174,12 +174,11 @@ uint8_t Map::navigate() {
     uint8_t rel_left = direction_lookup[(current_heading + 7) % 4].info;
 
     if (map[current_tile_id].id == 0) {
-
         uint8_t checksilver = 0;
 
         for(uint8_t i = 0; i < 4; i++) {
             if (map[current_tile_id].connected_tile_id[i] < 255) {
-                neighbour_tile_id = map[current_tile_id].connected_tile_id[i];
+                uint8_t neighbour_tile_id = map[current_tile_id].connected_tile_id[i];
                 if (map[neighbour_tile_id].info & VIS_BMSK) {
                     checksilver++;
                 }
