@@ -277,24 +277,24 @@ uint8_t Map::navigate() {
     */
     // test
 
-    if (map[current_tile_id].id == 0) {
-        uint8_t checksilver = 0;
+    // if (map[current_tile_id].id == 0) {
+    //     uint8_t checksilver = 0;
 
-        for(uint8_t i = 0; i < 4; i++) {
-            if (map[current_tile_id].connected_tile_id[i] < 255) {
-                uint8_t neighbour_tile_id = map[current_tile_id].connected_tile_id[i];
-                if (map[neighbour_tile_id].info & VIS_BMSK) {
-                    checksilver++;
-                }
-            } else {
-                checksilver++;
-            }
-        }
+    //     for(uint8_t i = 0; i < 4; i++) {
+    //         if (map[current_tile_id].connected_tile_id[i] < 255) {
+    //             uint8_t neighbour_tile_id = map[current_tile_id].connected_tile_id[i];
+    //             if (map[neighbour_tile_id].info & VIS_BMSK) {
+    //                 checksilver++;
+    //             }
+    //         } else {
+    //             checksilver++;
+    //         }
+    //     }
 
-        if (checksilver == 4) {
-            return state_silver;
-        }
-    }
+    //     if (checksilver == 4) {
+    //         return state_silver;
+    //     }
+    // }
 
     if (!(map[current_tile_id].info & rel_left)) {
         target_bearing -= 90.0f;

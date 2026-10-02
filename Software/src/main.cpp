@@ -171,6 +171,7 @@ void forward()
         return;
     }
 
+
     if (use_forward_lrfs && (front < target_dist)) {
         pause_start = millis();
         state = PAUSE;
@@ -246,7 +247,16 @@ void forward()
     } else if (colour.detect_red()) {
         harmed_victim_cond = 1;
         unharmed_victim_cond = 0;
+    } else if (colour.detect_silver()) {
+        if (pause_start < 10000) {
+            silver_tile_cond = 0;        
+        } else {
+            silver_tile_cond = 1;
+            unharmed_victim_cond = 0;
+            harmed_victim_cond = 0;
+        }
     }
+
 }
 
 void rotate_left()
@@ -323,9 +333,9 @@ void navigation()
             state = ROTATE_180;
             break;
 
-        case(state_silver):
-            state = SILVER;
-            break;
+        // case(state_silver):
+        //     state = SILVER;
+        //     break;
     }
 
     if (target_bearing > 180.0f) {
