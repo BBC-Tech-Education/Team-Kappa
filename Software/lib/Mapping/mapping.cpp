@@ -175,6 +175,7 @@ void Map::search_map()
     uint8_t current_search_id = 0;
     uint8_t search_num = 1;
     uint8_t found_next_tile = 0;
+    uint8_t start_search_id;
 
     search = (Search_t*)malloc(sizeof(Search_t) * search_num);
 
@@ -186,12 +187,11 @@ void Map::search_map()
         uint8_t current_search_tile_id = search[current_search_id].tile_id;
 
         if (!(map[current_search_tile_id].info & VIS_BMSK)) {
-            uint8_t target_search_id = current_search_id;
             found_next_tile = 1;
             break;
         }
 
-        if (map[current_search_tile_id].tile_id == 0) {
+        if (map[current_search_tile_id].id == 0) {
             uint8_t start_search_id = current_search_id;
         }
 
@@ -215,7 +215,7 @@ void Map::search_map()
     if (found_next_tile) {
         step_num = 1;
         nav = (Navigation_t*)malloc(sizeof(Navigation_t) * step_num);
-        for (uint8_t search_id = target_search_id; search_id > 0; search_id = search[search_id].parent_search_id) {
+        for (uint8_t search_id = current_search_id; search_id > 0; search_id = search[search_id].parent_search_id) {
             
             uint8_t tile_id = search[search_id].tile_id;
             uint8_t tile_step = step_num++;
@@ -254,7 +254,7 @@ uint8_t Map::navigate() {
     uint8_t rel_left = direction_lookup[(current_heading + 7) % 4].info;
 
     // test
-
+    /*
     if (current_step == step_num) {
         free(nav);
         nav = nullptr;
@@ -274,6 +274,7 @@ uint8_t Map::navigate() {
         uint8_t target_tile_id = nav[current_step].id;
         current_step++;
     }
+    */
     // test
 
     if (map[current_tile_id].id == 0) {

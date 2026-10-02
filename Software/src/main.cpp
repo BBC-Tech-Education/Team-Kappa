@@ -80,7 +80,7 @@ void setup()
 
     motor.init();
     lrfs.init();
-    colour.init();
+    // colour.init();
     maze.init();
     pinMode(LED_RED, OUTPUT);
     pinMode(LED_GREEN, OUTPUT);
@@ -105,7 +105,7 @@ void loop()
     static sensors_event_t event;
 
     lrfs.update();
-    colour.update();
+    // colour.update();
     bno.getEvent(&event);
 
     current_bearing = event.orientation.x;
@@ -297,35 +297,35 @@ void navigation()
     maze.update(front, right, back, left);
     uint8_t next_state = maze.navigate();
     switch(next_state) {
-    case(state_forward):
-        if (front > (back + TILE_DIST)) {
-        use_forward_lrfs = 0;
-        target_dist = back + TILE_DIST;    
-        } else {
-            use_forward_lrfs = 1;
-            target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
-        }
-        state = FORWARD;
-        break;
+        case(state_forward):
+            if (front > (back + TILE_DIST)) {
+                use_forward_lrfs = 0;
+                target_dist = back + TILE_DIST;    
+            } else {
+                use_forward_lrfs = 1;
+                target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
+            }
+            state = FORWARD;
+            break;
 
-    case(state_left):
-        target_bearing -= 90.0f;
-        state = ROTATE_L;
-        break;
+        case(state_left):
+            target_bearing -= 90.0f;
+            state = ROTATE_L;
+            break;
 
-    case(state_right):
-        target_bearing += 90.0f;
-        state = ROTATE_R;
-        break;
+        case(state_right):
+            target_bearing += 90.0f;
+            state = ROTATE_R;
+            break;
 
-    case(state_180):
+        case(state_180):
+            target_bearing -= 180.0f;
+            state = ROTATE_180;
+            break;
 
-        target_bearing -= 180.0f;
-        state = ROTATE_180;
-        break;
-    case(state_silver):
-        state = SILVER;
-        break;
+        case(state_silver):
+            state = SILVER;
+            break;
     }
 
     if (target_bearing > 180.0f) {
@@ -333,7 +333,6 @@ void navigation()
     } else if (target_bearing <= -180.0f) {
         target_bearing += 360.0f;
     }
-
 }
 
 void black_tile_backwards()

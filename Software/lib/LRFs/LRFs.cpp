@@ -35,21 +35,27 @@ void LRFs::init()
 
 void LRFs::update() 
 {   
-    // Serial.print("LRF Values: ");  
+    Serial.print("LRF Values: ");  
     for (uint8_t i = 0; i < SENSOR_NUM; i++) {
         if (sensors[i].dataReady()) {
-            lrf_values[i] = sensors[i].read(false);
-        }
+            int16_t val = sensors[i].read(false);
 
-        if ((lrf_values[i] >= 1300) || (lrf_values[i] == 0)) {
-            lrf_values [i] = 1300;
+
+            // sort this out. we see values less than 100 and 1200.
+            if (val == 0 || val > 1200) {
+                lrf_values[i] = 1200;
+            } else if (val < 10) { 
+                lrf_values[i] = 0;
+            } else {
+                lrf_values[i] = val;
+            }
         }
 
         if (sensors[i].timeoutOccurred()) {
             lrf_values[i] = 0;
         }
-        // Serial.print(lrf_values[i]);
-        // Serial.print("\t");
+        Serial.print(lrf_values[i]);
+        Serial.print("\t");
     }
     // Serial.println();
 
