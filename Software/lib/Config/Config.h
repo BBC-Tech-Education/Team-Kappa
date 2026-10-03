@@ -16,9 +16,9 @@
 
 
 /////////////////////////////////// Movement ///////////////////////////////////
-#define MOVE_SPEED 60.0f
+#define MOVE_SPEED 70.0f
 #define ROTATE_SPEED 20.0f
-#define BEARING_KP 3.0f
+#define BEARING_KP 2.3f
 #define MAX_BEARING_ERROR 28.0f
 
 
@@ -28,6 +28,6 @@
 #define MIN_TARGET_DIST 105
 #define TARGET_WALL_DIST 150
 #define ROTATION_MARGIN 5.0f
-#define TILE_DIST       300
+#define TILE_DIST       270
 
-#endif // CONFIG_H
+#endif // CONFIG_H 

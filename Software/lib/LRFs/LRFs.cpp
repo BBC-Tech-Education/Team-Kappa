@@ -57,7 +57,7 @@ void LRFs::update()
         Serial.print(lrf_values[i]);
         Serial.print("\t");
     }
-    // Serial.println();
+    Serial.println();
 
 }
 

@@ -72,6 +72,7 @@ String stateToName(int st);
 /////////////////////////////////// Functions //////////////////////////////////
 
 
+
 void setup()
 {
     delay(2000);
@@ -80,7 +81,7 @@ void setup()
 
     motor.init();
     lrfs.init();
-    // colour.init();
+    colour.init();
     maze.init();
     pinMode(LED_RED, OUTPUT);
     pinMode(LED_GREEN, OUTPUT);
@@ -101,11 +102,20 @@ void setup()
 
 void loop()
 {
+
     // READ ALL OF THE SENSORS
     static sensors_event_t event;
 
     lrfs.update();
-    // colour.update();
+    colour.update();
+    // Serial.print(colour.detect_black());
+    
+    // Serial.print(colour.detect_silver());
+    // Serial.print(colour.detect_green());
+    // Serial.print(colour.detect_red());
+    // Serial.println();
+
+
     bno.getEvent(&event);
 
     current_bearing = event.orientation.x;
@@ -113,8 +123,8 @@ void loop()
         current_bearing -= 360.0f;
     }
 
-    // Serial.println(stateToName(state));
-    Serial.println(use_forward_lrfs);
+    Serial.println(stateToName(state));
+    // Serial.println(use_forward_lrfs);
 
     // FSM
     switch (state) {
@@ -232,6 +242,11 @@ void forward()
     } else if (bearing_error > 180.0f) {
         bearing_error -= 360.0f;
     }
+    if (bearing_error > MAX_BEARING_ERROR) {
+        bearing_error = MAX_BEARING_ERROR;
+    } else if (bearing_error < -MAX_BEARING_ERROR) {
+        bearing_error = -MAX_BEARING_ERROR;
+    }
 
     float correction = bearing_error * BEARING_KP;
     
@@ -263,8 +278,16 @@ void rotate_left()
 {
     if (fabs(current_bearing - target_bearing) < ROTATION_MARGIN) {
         uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
-        state = FORWARD;
+        uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
+            if (front > (back + TILE_DIST)) {
+                use_forward_lrfs = 0;
+                target_dist = back + TILE_DIST;    
+            } else {
+                use_forward_lrfs = 1;
+                target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
+            }
+            state = FORWARD;
+
         
     
     } else {
@@ -276,8 +299,17 @@ void rotate_right()
 {
     if (fabs(current_bearing - target_bearing) < ROTATION_MARGIN) {
         uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
-        state = FORWARD;
+        uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
+
+            if (front > (back + TILE_DIST)) {
+                use_forward_lrfs = 0;
+                target_dist = back + TILE_DIST;    
+            } else {
+                use_forward_lrfs = 1;
+                target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
+            }
+            state = FORWARD;
+
         
     } else {
         motor.move(ROTATE_SPEED, -ROTATE_SPEED);
@@ -288,8 +320,17 @@ void rotate_180()
 {
     if (fabs(current_bearing - target_bearing) < ROTATION_MARGIN) {
         uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
-        state = FORWARD;
+        uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
+
+            if (front > (back + TILE_DIST)) {
+                use_forward_lrfs = 0;
+                target_dist = back + TILE_DIST;    
+            } else {
+                use_forward_lrfs = 1;
+                target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
+            }
+            state = FORWARD;
+
     } else {
         motor.move(ROTATE_SPEED, -ROTATE_SPEED);
     }
@@ -458,11 +499,14 @@ void pause()
     if ((millis() - pause_start) > 250) {
         if (silver_tile_cond) {
             state = SILVER;
+
         }
         else if (unharmed_victim_cond || harmed_victim_cond) {
             state = VICTIMS;
+
         } else {
             state = NAV;
+
         }
     } else {
         motor.move(0.0f, 0.0f);

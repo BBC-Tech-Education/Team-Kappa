@@ -54,7 +54,7 @@ void ColourSensor::update()
             
         } else {
             float red_green = readings[8] / (float)readings[3];
-               
+
             if (red_green > 3.0f) {
                 red_victim = 1;
             } else if (red_green < 0.87f) {
@@ -72,13 +72,17 @@ void ColourSensor::update()
 
             } else {
                 float nir_blue = readings[5] / (float)readings[1];
+                // Serial.print(nir_blue);
                 if (nir_blue < 0.31f) {
                     silver_tile = 1;
                  }
             }
+            // Serial.println();
         }
 
         sensor.startReading();
+
+    
 
     }
 }
