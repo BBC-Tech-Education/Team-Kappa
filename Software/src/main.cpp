@@ -85,12 +85,11 @@ void setup()
     maze.init();
     pinMode(LED_RED, OUTPUT);
     pinMode(LED_GREEN, OUTPUT);
+    pinMode(DROPPER, OUTPUT);
 
     dropper_servo.attach(DROPPER);
-    delay(100);
-    dropper_servo.write(90);
-
-
+    // delay(100);
+    // dropper_servo.write(90);
     while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
         Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
         delay(1000);
@@ -242,11 +241,11 @@ void forward()
     } else if (bearing_error > 180.0f) {
         bearing_error -= 360.0f;
     }
-    if (bearing_error > MAX_BEARING_ERROR) {
-        bearing_error = MAX_BEARING_ERROR;
-    } else if (bearing_error < -MAX_BEARING_ERROR) {
-        bearing_error = -MAX_BEARING_ERROR;
-    }
+    // if (bearing_error > MAX_BEARING_ERROR) {
+    //     bearing_error = MAX_BEARING_ERROR;
+    // } else if (bearing_error < -MAX_BEARING_ERROR) {
+    //     bearing_error = -MAX_BEARING_ERROR;
+    // }
 
     float correction = bearing_error * BEARING_KP;
     
@@ -447,11 +446,11 @@ void victims()
             delay(3000);
             digitalWrite(LED_RED, LOW);
 
-            if (right < TARGET_WALL_DIST) {
-                dropper_right();
-            } else {
-                dropper_left();
-            }
+            // if (right < TARGET_WALL_DIST) {
+            //     dropper_right();
+            // } else {
+            //     dropper_left();
+            // }
             state = NAV;
 
         } else if (unharmed_victim_cond) {
