@@ -88,8 +88,8 @@ void setup()
     pinMode(DROPPER, OUTPUT);
 
     dropper_servo.attach(DROPPER);
-    // delay(100);
-    // dropper_servo.write(90);
+    delay(100);
+    dropper_servo.write(90);
     while(!bno.begin(OPERATION_MODE_IMUPLUS)) {
         Serial.println("No BNO055 detected. Check your wiring or I2C ADDR.");
         delay(1000);
@@ -172,7 +172,15 @@ void forward()
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
     uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
 
-    if (colour.detect_black()) {
+    if (colour.detect_green()) {
+        unharmed_victim_cond = 1;
+        harmed_victim_cond = 0;
+        state = VICTIMS;
+    } else if (colour.detect_red()) {
+        harmed_victim_cond = 1;
+        unharmed_victim_cond = 0;
+        state = VICTIMS;
+    } else if (colour.detect_black()) {
         state = BT_BACK;
         maze.found_black_tile();
         harmed_victim_cond = 0;
@@ -255,13 +263,8 @@ void forward()
 
 
     // COLOUR DETECTION
-    if (colour.detect_green()) {
-        unharmed_victim_cond = 1;
-        harmed_victim_cond = 0;
-    } else if (colour.detect_red()) {
-        harmed_victim_cond = 1;
-        unharmed_victim_cond = 0;
-    } else if (colour.detect_silver()) {
+
+    if (colour.detect_silver()) {
         if (pause_start < 10000) {
             silver_tile_cond = 0;        
         } else {
@@ -446,11 +449,11 @@ void victims()
             delay(3000);
             digitalWrite(LED_RED, LOW);
 
-            // if (right < TARGET_WALL_DIST) {
-            //     dropper_right();
-            // } else {
-            //     dropper_left();
-            // }
+            if (right < TARGET_WALL_DIST) {
+                dropper_right();
+            } else {
+                dropper_left();
+            }
             state = NAV;
 
         } else if (unharmed_victim_cond) {
@@ -498,14 +501,8 @@ void pause()
     if ((millis() - pause_start) > 250) {
         if (silver_tile_cond) {
             state = SILVER;
-
-        }
-        else if (unharmed_victim_cond || harmed_victim_cond) {
-            state = VICTIMS;
-
         } else {
             state = NAV;
-
         }
     } else {
         motor.move(0.0f, 0.0f);
