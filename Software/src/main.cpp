@@ -122,7 +122,7 @@ void loop()
         current_bearing -= 360.0f;
     }
 
-    Serial.println(stateToName(state));
+    // Serial.println(stateToName(state));
     // Serial.println(use_forward_lrfs);
 
     // FSM
@@ -173,13 +173,15 @@ void forward()
     uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
 
     if (colour.detect_green()) {
+        delay(200);
         unharmed_victim_cond = 1;
         harmed_victim_cond = 0;
-        state = VICTIMS;
+        state = PAUSE;
     } else if (colour.detect_red()) {
+        delay(200);
         harmed_victim_cond = 1;
         unharmed_victim_cond = 0;
-        state = VICTIMS;
+        state = PAUSE;
     } else if (colour.detect_black()) {
         state = BT_BACK;
         maze.found_black_tile();
@@ -249,6 +251,14 @@ void forward()
     } else if (bearing_error > 180.0f) {
         bearing_error -= 360.0f;
     }
+
+    // Serial.print("LRF ERROR: ");
+    // Serial.print(error);
+    // Serial.print("Bearing Adjustment: ");
+    // Serial.print(bearing_adjustment);
+    // Serial.print("Bearing Error: ");
+    // Serial.print(bearing_error);
+    // Serial.println();
     // if (bearing_error > MAX_BEARING_ERROR) {
     //     bearing_error = MAX_BEARING_ERROR;
     // } else if (bearing_error < -MAX_BEARING_ERROR) {
@@ -437,6 +447,7 @@ void black_tile_rotate()
 
 void victims()
 {   
+    motor.move(0.0f, 0.0f);
     uint8_t vic_seen_bef = maze.map_victim();
     uint16_t right = (lrfs.get_value(LRF_RF) + lrfs.get_value(LRF_RB)) / 2;
     
@@ -454,7 +465,7 @@ void victims()
             } else {
                 dropper_left();
             }
-            state = NAV;
+            state = FORWARD;
 
         } else if (unharmed_victim_cond) {
             unharmed_victim_cond = 0;
@@ -462,7 +473,7 @@ void victims()
             digitalWrite(LED_GREEN, HIGH);
             delay(3000);
             digitalWrite(LED_GREEN, LOW);
-            state = NAV;
+            state = FORWARD;
         }
         maze.victim_update();
         break;
@@ -501,6 +512,9 @@ void pause()
     if ((millis() - pause_start) > 250) {
         if (silver_tile_cond) {
             state = SILVER;
+        } else if (unharmed_victim_cond || harmed_victim_cond) {
+            state = VICTIMS;
+        
         } else {
             state = NAV;
         }

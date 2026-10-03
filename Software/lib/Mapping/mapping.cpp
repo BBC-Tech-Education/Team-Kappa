@@ -19,6 +19,9 @@ uint8_t Map::map_victim()
 void Map::victim_update()
 {
     map[current_tile_id].info |= VIC_BMSK;
+    Serial.print("Current Tile ");
+    Serial.print(map[current_tile_id].id);
+    Serial.println(" has victim");
 }
 
 void Map::found_black_tile()
@@ -81,27 +84,27 @@ void Map::update(uint16_t front, uint16_t right, uint16_t back, uint16_t left)
 
     map[current_tile_id].info |= VIS_BMSK;
 
-    // Serial.print("Current Cell: ");
-    // Serial.print(map[current_tile_id].id);
-    // Serial.print("\t");
+    Serial.print("Current Cell: ");
+    Serial.print(map[current_tile_id].id);
+    Serial.print("\t");
 
-    // if (map[current_tile_id].info & WALL_N_BMSK) {
-    //     Serial.print("N \t");
-    // }
-    // if (map[current_tile_id].info & WALL_E_BMSK) {
-    //     Serial.print("E \t");
-    // }
-    // if (map[current_tile_id].info & WALL_S_BMSK) {
-    //     Serial.print("S \t");
-    // }
-    // if (map[current_tile_id].info & WALL_W_BMSK) {
-    //     Serial.print("W \t");
-    // }
-    // Serial.print("\n");
+    if (map[current_tile_id].info & WALL_N_BMSK) {
+        Serial.print("N \t");
+    }
+    if (map[current_tile_id].info & WALL_E_BMSK) {
+        Serial.print("E \t");
+    }
+    if (map[current_tile_id].info & WALL_S_BMSK) {
+        Serial.print("S \t");
+    }
+    if (map[current_tile_id].info & WALL_W_BMSK) {
+        Serial.print("W \t");
+    }
+    Serial.print("\n");
     create_tiles();
 
 
-    //follow left wall
+    // follow left wall
 
     // Figure out which way to go next
 
@@ -120,10 +123,10 @@ void Map::create_tiles()
 
             if (neighbour_cell_id == 255) { //create tile
                 uint8_t id = tile_num++;
-                // Serial.print("New Tile id: ");
-                // Serial.println(id);
-                // Serial.print("Tile Num: ");
-                // Serial.println(tile_num);
+                Serial.print("New Tile id: ");
+                Serial.println(id);
+                Serial.print("Tile Num: ");
+                Serial.println(tile_num);
                 map = (Tile_t*)realloc(map, sizeof(Tile_t) * tile_num);
 
                 map[id].id = id;
@@ -136,23 +139,23 @@ void Map::create_tiles()
                 
                 map[id].connected_tile_id[(i + 2) % 4] = current_tile_id;
                 map[current_tile_id].connected_tile_id[i] = id;
-                // Serial.print("New cell connected at ");
-                // Serial.print((i + 2) % 4);
-                // Serial.println(" with current");
-                // Serial.print("Current cell connected at ");
-                // Serial.print(i);
-                // Serial.println(" with new cell");
+                Serial.print("New cell connected at ");
+                Serial.print((i + 2) % 4);
+                Serial.println(" with current");
+                Serial.print("Current cell connected at ");
+                Serial.print(i);
+                Serial.println(" with new cell");
 
             } else { //connect tiles
 
                 map[current_tile_id].connected_tile_id[i] = neighbour_cell_id;
                 map[neighbour_cell_id].connected_tile_id[(i + 2) % 4] = current_tile_id;
-                // Serial.print("Neighbour cell connected at ");
-                // Serial.print((i + 2) % 4);
-                // Serial.println(" with current");
-                // Serial.print("Current cell connected at ");
-                // Serial.print(i);
-                // Serial.println(" with neighbour");
+                Serial.print("Neighbour cell connected at ");
+                Serial.print((i + 2) % 4);
+                Serial.println(" with current");
+                Serial.print("Current cell connected at ");
+                Serial.print(i);
+                Serial.println(" with neighbour");
             }
         }
     }
@@ -162,8 +165,8 @@ uint8_t Map::find_tile(int8_t target_x, int8_t target_y)
 {
     for(uint8_t i = 0; i < tile_num; i++) {
         if ((map[i].x == target_x) && (map[i].y == target_y)) {
-            // Serial.print("Found tile id ");
-            // Serial.println(i);
+            Serial.print("Found tile id ");
+            Serial.println(i);
             return i;
         }
     }
@@ -299,32 +302,32 @@ uint8_t Map::navigate() {
     if (!(map[current_tile_id].info & rel_left)) {
         target_bearing -= 90.0f;
         current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 7) % 4];
-        // Serial.println("state_left");
-        // Serial.print("New current id: ");
-        // Serial.println(current_tile_id);
+        Serial.println("state_left");
+        Serial.print("New current id: ");
+        Serial.println(current_tile_id);
         return state_left;
 
     } else if (!(map[current_tile_id].info & rel_front)) {
         current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 4) % 4];
-        // Serial.println("State_forward");
-        // Serial.print("New current id: ");
-        // Serial.println(current_tile_id);
+        Serial.println("State_forward");
+        Serial.print("New current id: ");
+        Serial.println(current_tile_id);
         return state_forward;
 
     } else if (!(map[current_tile_id].info & rel_right)) {
         target_bearing += 90.0f;
         current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 5) % 4];
-        // Serial.println("State_right");
-        // Serial.print("New current id: ");
-        // Serial.println(current_tile_id);
+        Serial.println("State_right");
+        Serial.print("New current id: ");
+        Serial.println(current_tile_id);
         return state_right;
 
     } else {
         target_bearing -= 180.0f;
         current_tile_id = map[current_tile_id].connected_tile_id[(current_heading + 6) % 4];
-        // Serial.println("State_180");
-        // Serial.print("New current id: ");
-        // Serial.println(current_tile_id);
+        Serial.println("State_180");
+        Serial.print("New current id: ");
+        Serial.println(current_tile_id);
         return state_180;
     }
 
