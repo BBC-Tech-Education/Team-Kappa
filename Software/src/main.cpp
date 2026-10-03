@@ -31,6 +31,8 @@ typedef enum {
     VICTIMS,
     SILVER,
     PAUSE,
+    VIC_PAUSE,
+    VIC_MOVE,
 } State;
 
 /////////////////////////////// Global Variables ///////////////////////////////
@@ -65,6 +67,8 @@ void silver_tile();
 void pause();
 void dropper_left();
 void dropper_right();
+void vic_pause();
+void vic_move();
 String stateToName(int st);
 
 
@@ -160,6 +164,12 @@ void loop()
     case PAUSE:
         pause();
         break;
+    case VIC_PAUSE:
+        vic_pause();
+        break;
+    case VIC_MOVE:
+        vic_move();
+        break;
     default:
         state = NAV;
         break;
@@ -172,16 +182,10 @@ void forward()
     uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
     uint16_t back = (lrfs.get_value(LRF_BL) + lrfs.get_value(LRF_BR)) / 2;
 
-    if (colour.detect_green()) {
-        delay(200);
-        unharmed_victim_cond = 1;
-        harmed_victim_cond = 0;
-        state = PAUSE;
-    } else if (colour.detect_red()) {
-        delay(200);
-        harmed_victim_cond = 1;
-        unharmed_victim_cond = 0;
-        state = PAUSE;
+    if (colour.detect_green() || colour.detect_red()) {
+        pause_start = millis();
+        state = VIC_PAUSE;
+        return;
     } else if (colour.detect_black()) {
         state = BT_BACK;
         maze.found_black_tile();
@@ -195,6 +199,7 @@ void forward()
         pause_start = millis();
         state = PAUSE;
         return;
+
     } else if (!use_forward_lrfs && (back > target_dist)) {
         pause_start = millis();
         state = PAUSE;
@@ -259,11 +264,6 @@ void forward()
     // Serial.print("Bearing Error: ");
     // Serial.print(bearing_error);
     // Serial.println();
-    // if (bearing_error > MAX_BEARING_ERROR) {
-    //     bearing_error = MAX_BEARING_ERROR;
-    // } else if (bearing_error < -MAX_BEARING_ERROR) {
-    //     bearing_error = -MAX_BEARING_ERROR;
-    // }
 
     float correction = bearing_error * BEARING_KP;
     
@@ -437,8 +437,6 @@ void black_tile_pause()
 void black_tile_rotate()
 {
     if (fabs(current_bearing - target_bearing) < ROTATION_MARGIN) {
-        uint16_t front = (lrfs.get_value(LRF_FL) + lrfs.get_value(LRF_FR)) / 2;
-        target_dist = max(front - TILE_DIST, MIN_TARGET_DIST);
         state = NAV;
     } else {
         motor.move(ROTATE_SPEED, -ROTATE_SPEED);
@@ -465,7 +463,7 @@ void victims()
             } else {
                 dropper_left();
             }
-            state = FORWARD;
+            state = VIC_MOVE;
 
         } else if (unharmed_victim_cond) {
             unharmed_victim_cond = 0;
@@ -473,7 +471,7 @@ void victims()
             digitalWrite(LED_GREEN, HIGH);
             delay(3000);
             digitalWrite(LED_GREEN, LOW);
-            state = FORWARD;
+            state = VIC_MOVE;
         }
         maze.victim_update();
         break;
@@ -481,7 +479,7 @@ void victims()
     case(SEEN_VIC):
         unharmed_victim_cond = 0;
         harmed_victim_cond = 0;
-        state = NAV;
+        state = FORWARD;
         break;
     }
 }
@@ -508,6 +506,7 @@ void silver_tile()
 }
 
 void pause()
+
 {
     if ((millis() - pause_start) > 250) {
         if (silver_tile_cond) {
@@ -521,6 +520,32 @@ void pause()
     } else {
         motor.move(0.0f, 0.0f);
     }
+}
+
+void vic_pause() {
+
+    if ((millis() - pause_start) > 250) {
+        if (colour.detect_red()) {
+            harmed_victim_cond = 1;
+            unharmed_victim_cond = 0;
+            state = VICTIMS;
+            return;
+        } else if (colour.detect_green()) {
+            unharmed_victim_cond = 1;
+            harmed_victim_cond = 0;
+            state = VICTIMS;
+            return;
+        } else if (colour.detect_black()) {
+            state = BT_BACK;
+            maze.found_black_tile();
+            harmed_victim_cond = 0;
+            unharmed_victim_cond = 0;
+            return;
+        }
+    } else {
+        motor.move(0.0f, 0.0f);
+    }
+    
 }
 
 void dropper_left() {
@@ -541,6 +566,14 @@ void dropper_right() {
     dropper_servo.write(100); // Pushes package outside
     delay(1000);
     dropper_servo.write(90); //returns to original position
+}
+
+void vic_move() {
+    if (!colour.detect_green() && !colour.detect_red()) {
+        state = FORWARD;
+    } else {
+        motor.move(MOVE_SPEED, MOVE_SPEED);
+    }
 }
 
 String stateToName(int st) {
